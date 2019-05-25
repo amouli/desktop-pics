@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting"
+	xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:wmq="http://www.mulesoft.org/schema/mule/ee/wmq" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:dynamicscrm="http://www.mulesoft.org/schema/mule/dynamicscrm" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/dynamicscrm http://www.mulesoft.org/schema/mule/dynamicscrm/current/mule-dynamicscrm.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/ee/wmq http://www.mulesoft.org/schema/mule/ee/wmq/current/mule-wmq-ee.xsd">
+
+    <flow name="ceaCrmExportAccountStatusFlow" processingStrategy="synchronous" initialState="stopped">
+        <poll doc:name="Poll">
+            <fixed-frequency-scheduler frequency="30" timeUnit="MINUTES" startDelay="4"/>
+            <processor-chain doc:name="Processor Chain">
+                <set-variable variableName="flowName" value="${ceaFlowName}" doc:name="Get Flow Name"/>
+                <logger message="cea_logger_1: Start pulling account from Crm " level="INFO" doc:name="cea_logger_1"/>
+                <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot; &gt;
+    &lt;entity name=&quot;account&quot; &gt;
+        &lt;attribute name=&quot;accountnumber&quot; /&gt;
+        &lt;attribute name=&quot;statecode&quot; /&gt;
+        &lt;filter&gt;
+            &lt;condition attribute=&quot;accountnumber&quot; operator=&quot;not-null&quot; /&gt;
+        &lt;/filter&gt;
+    &lt;/entity&gt;
+&lt;/fetch&gt;" doc:name="Get Sample Orders Form CRM"/>
+            </processor-chain>
+        </poll>
+        <json:object-to-json-transformer doc:name="Object to JSON"/>
+        <logger message="cea_logger_2 : Initialize Account data : #[payload]" level="INFO" doc:name="cea_logger_2"/>
+        <dw:transform-message metadata:id="8615a8a7-0dcf-4431-93d5-759d93fbc840" doc:name="Transform Message">
+            <dw:input-payload/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload map ((payload01 , indexOfPayload01) -> {
+	account: {
+		account_number:  payload01.accountnumber,
+		account_status : "1" when payload01.statecode == 0 otherwise "0"
+	}
+})]]></dw:set-payload>
+        </dw:transform-message>
+        <json:json-to-object-transformer returnClass="java.util.List" doc:name="JSON to Object List"/>
+        <logger level="INFO" doc:name="cea_logger_3" message="cea_logger_3 : Start the parsing process"/>
+
+        <foreach collection="#[payload]" doc:name="For Each Account">
+        <set-payload value="#[payload.account]" doc:name="Current Account"/>
+            <json:object-to-json-transformer doc:name="Object to JSON"/>
+            <logger message="cea_logger_4 : record #[flowVars.counter]: Request:  #[payload]" level="INFO" doc:name="cea_logger_4"/>
+            <http:request config-ref="HTTP_Request_Configuration" path="${ceaCDFAccountStatusRestPath}" method="POST" doc:name="Post Account to CDF">
+                <http:request-builder>
+                    <http:header headerName="Content-Type" value="${api.contentType}"/>
+                    <http:header headerName="AppID" value="${api.appID}"/>
+                    <http:header headerName="AppPwd" value="${api.appPwd}"/>
+                </http:request-builder>
+            </http:request>
+            <logger message="cea_logger_5 : Response: #[message.payloadAs(java.lang.String)]" level="INFO" doc:name="cea_logger_5"/>
+        </foreach>
+        <logger message="cea_logger_6 : Posting Account from CRM to CDF done." level="INFO" doc:name="cea_logger_6"/>
+        <exception-strategy ref="Catch_Exception_Handling1" doc:name="Reference Exception Strategy"/>
+    </flow>
+
+</mule>

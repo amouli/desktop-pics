@@ -1,0 +1,502 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:json="http://www.mulesoft.org/schema/mule/json"
+	xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw"
+	xmlns:dynamicscrm="http://www.mulesoft.org/schema/mule/dynamicscrm"
+	xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/dynamicscrm http://www.mulesoft.org/schema/mule/dynamicscrm/current/mule-dynamicscrm.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+
+
+  <flow name="serialnumber-importFlow"  processingStrategy="synchronous" initialState="started">
+    <jms:inbound-endpoint queue="${serialnumber.single.queue}" connector-ref="Active_MQ" doc:name="Serial Number Single Queue">
+      <jms:transaction action="ALWAYS_BEGIN"/>
+    </jms:inbound-endpoint>
+    <set-variable variableName="msgId" value="#[message.id]" doc:name="Set Message Id"/>
+    <enricher target="#[flowVars.jmsRes]" doc:name="Message Enricher">
+      <processor-chain doc:name="Processor Chain">
+        <expression-component doc:name="Set TransactionLogEntry values">
+          <![CDATA[java.util.Date today = new java.util.Date();
+java.util.Map txnObj=new java.util.HashMap();
+txnObj.put("transactionId",flowVars.msgId);
+txnObj.put("serviceName","JDE SerialNumberService from QUEUE to CRM");
+txnObj.put("timestamp",new java.sql.Timestamp(today.getTime()));
+
+payload=txnObj;
+return payload;]]>
+        </expression-component>
+        <jms:outbound-endpoint queue="TransactionLogEntry" connector-ref="Active_MQ" doc:name="TransactionLogEntry"/>
+      </processor-chain>
+    </enricher>
+
+
+    <expression-component doc:name="Set Error Var">
+      <![CDATA[sessionVars.code="101";
+sessionVars.message="Bad request received from Queue to JDE CRM SerialNumberService";
+sessionVars.serviceName="JDE SerialNumberService from QUEUE to CRM ";
+sessionVars.flowName=flow.name;
+sessionVars.queuePayload=message.payloadAs(java.lang.String);
+sessionVars.exceptionCausedPayload=" $ No Payload $";]]>
+    </expression-component>
+
+    <set-variable variableName="warrantyNote" value="#[new java.util.HashSet()]" doc:name="Note Object Variable"/>
+    <logger message="1/ payload before transform #[payload] and #[message.dataType]" level="INFO" doc:name="Logger"/>
+    <dw:transform-message doc:name="Transform Message" metadata:id="3fd9d343-4607-4d81-9703-deab2764a1e4">
+            <dw:input-payload mimeType="application/java"/>
+      <dw:set-payload>
+        <![CDATA[%dw 1.0
+%output application/java
+---
+using(
+    currentLineType = lookup("lookup-line-temp", {
+	line_type: payload.SDLNTY,
+	amc_name : payload.WADOCO
+})
+)
+
+using(
+    currentOrderType = lookup("lookup-ordertype-temp", {
+	order_type: payload.SDDCTO,
+	amc_name : payload.WADOCO
+})
+)
+
+
+using(
+    currentOrdercat = lookup("lookup-orderproduct-cat", {
+	ordercat: payload.SDSRP3,
+	amc_name : payload.WADOCO
+})
+)
+
+using(
+    currentSalesbranch = lookup("lookup-original-sales-branch", {
+	salesbranch: payload.SDEMCU,
+	amc_name : payload.WADOCO
+})
+)
+
+using(
+    currentBulidbranch = lookup("lookup-build-branch", {
+	buildbranch: payload.SDMCU,
+	amc_name : payload.WADOCO
+})
+)
+
+{	
+	new_ordertype: currentOrderType.order_type,
+	//new_dateinvoice: payload.SDIVD as :datetime as :string {format: "yyyy-MM-d'T'HH:mm:ss"},
+	new_dateinvoice: payload.SDIVD as :date,	
+	new_linetype: currentLineType.line_type,
+	amc_name: payload.WADOCO as :string when payload.WADOCO != null otherwise "",
+	new_descriptionline1: payload.SDDSC1 as :string when payload.SDDSC1 != null otherwise "",
+	new_descriptionline2: payload.SDDSC2 as :string when payload.SDDSC2 != null otherwise "",
+	new_salesordernumber: payload.SDDOCO as :string when payload.SDDOCO != null otherwise "",
+	new_2nditemnumber: payload.SDLITM as :string when payload.SDLITM != null otherwise "",
+	new_jdenumber: payload.SDAN8 as :string when payload.SDAN8 != null otherwise "",
+	new_serialtype : 279640000,
+	new_linenumber: payload.SDLNID as :string when payload.SDLNID != null otherwise "",
+	new_gorderprodcat : currentOrdercat.ordercat,
+	new_originalsalesbranch : currentSalesbranch.salesbranch,
+	new_originalbuildbranch : currentBulidbranch.buildbranch,
+	new_equussalesrepname : payload.ABALPH,
+	new_originalsospponumber : payload.SDDOCO as :string when payload.SDDOCO != null otherwise ""
+}]]>
+      </dw:set-payload>
+      <dw:set-variable variableName="invoiceDateVar">
+        <![CDATA[%dw 1.0
+%output application/java
+---
+payload.SDIVD]]>
+      </dw:set-variable>
+      <dw:set-variable variableName="systemNumberVar">
+        <![CDATA[%dw 1.0
+%output application/java
+---
+payload.WADOCO as :number]]>
+      </dw:set-variable>
+    </dw:transform-message>
+
+	<logger message="1/ payload after transform #[payload] and #[message.dataType]" level="INFO" doc:name="Logger"/>
+    <set-variable variableName="orginalPayloadVar" value="#[payload]" doc:name="Orginal Payload Variable"/>
+        <expression-component doc:name="Set Error Var">
+        <![CDATA[sessionVars.code="103";
+sessionVars.message="Failed to Query in CRM account entity for the account Id for the Record Id:" +payload.amc_name;
+sessionVars.flowName="lookup - customer";
+sessionVars.exceptionCausedPayload= message.payloadAs(java.lang.String);
+]]>
+     </expression-component>
+        <enricher target="#[flowVars.crmAccountId]" doc:name="Message Enricher">
+            <flow-ref name="lookup-customer" doc:name="lookup-customer"/>
+        </enricher>
+    <expression-component doc:name="Set Error Var">
+      <![CDATA[sessionVars.code="103";
+sessionVars.message="Failed to Query in CRM lookup Default Domain user for the Record Id:" +payload.amc_name;
+sessionVars.flowName="lookup-defaultDomainUser";]]>
+    </expression-component>
+    <enricher target="#[flowVars.defaultDomainUserIdVar]" doc:name="Message Enricher">
+      <flow-ref name="lookup-defaultDomainUser" doc:name="lookup-defaultDomainUser"/>
+    </enricher>
+
+    <flow-ref name="JDE-BOM-Service-Sub-Flow" doc:name="JDE-BOM-Service-Sub-Flow"/>
+    <flow-ref name="SysemSerialNumber-Note" doc:name="SysemSerialNumber-Note"/>
+    <expression-component doc:name="Set Success Var">
+      <![CDATA[sessionVars.code="104";
+sessionVars.message="JDE CRM SerialNumberService got processed successfully for the Record Id :" +flowVars.orginalPayloadVar.amc_name;]]>
+    </expression-component>
+    <enricher target="#[flowVars.jmsRes]" doc:name="Message Enricher">
+      <processor-chain doc:name="Processor Chain">
+        <expression-component doc:name="Set TransactionLog Update Values">
+          <![CDATA[java.util.Date today = new java.util.Date();
+java.util.Map txnObj=new java.util.HashMap();
+txnObj.put("transactionId",flowVars.msgId);
+txnObj.put("statusCode","3");
+txnObj.put("timestamp",new java.sql.Timestamp(today.getTime()));
+
+payload=txnObj;
+
+return payload;]]>
+        </expression-component>
+        <jms:outbound-endpoint queue="TransactionLogUpdate" connector-ref="Active_MQ" doc:name="TransactionLogUpdate"/>
+      </processor-chain>
+    </enricher>
+
+    <flow-ref name="globalSub_Flow" doc:name="globalSub_Flow"/>
+    <exception-strategy ref="globalCatch_Exception_Strategy" doc:name="Reference Exception Strategy"/>
+
+
+  </flow>
+  
+  <sub-flow name="JDE-BOM-Service-Sub-Flow">
+    <expression-component doc:name="Set Error Var">
+      <![CDATA[sessionVars.code="103";
+sessionVars.message="Failed to Invoke the JDE Bom Service  for the Record Id :"+flowVars.orginalPayloadVar.amc_name;
+sessionVars.flowName="JDE-BOM-Service-Sub-Flow";
+
+// Added note for if invoice date is null
+if(flowVars.orginalPayloadVar.new_dateinvoice == null)
+{
+   flowVars.warrantyNote.add("System Serial Number " + flowVars.orginalPayloadVar.amc_name);
+   flowVars.warrantyNote.add("\nInvoice Date is missing, this will stop Entitlement to be created ");
+}
+else
+{
+   flowVars.warrantyNote.add("System Serial Number " + flowVars.orginalPayloadVar.amc_name);
+   flowVars.warrantyNote.add("\nInvoice Date exists: " + flowVars.orginalPayloadVar.new_dateinvoice);
+}]]>
+    </expression-component>
+
+        <flow-ref name="Invoke-JDE-BOM-Service-SubFlow" doc:name="Invoke-JDE-BOM-Service-SubFlow"/>
+
+        <expression-component doc:name="Set Error Var &amp; Add ownerId BFCode and Desc to Payload">
+        <![CDATA[sessionVars.code="103";
+sessionVars.message="Failed to Query or Create in CRM SerialNumber entity for the Record Id:" +flowVars.orginalPayloadVar.amc_name;
+sessionVars.flowName="SystemSerialNumber-Create-Sub-Flow";
+
+sessionVars.JDEBOMServicePayload = payload;   // set the JDE bom response payload to sessionVars 
+
+
+//Adding system user id, acount id and BF Code and description to payload
+payload = flowVars.orginalPayloadVar;   // Orginal Payload added to Payload
+payload.ownerid_referenceto_systemuser = flowVars.defaultDomainUserIdVar.systemuserid;
+payload.new_customer_referenceto_account = (flowVars.crmAccountId != "not matched") ?  flowVars.crmAccountId.accountid  : ""; 
+
+if(flowVars.BFCodeDescVar.size() != 0)
+{
+    payload.new_buildfeecodedescription = flowVars.BFCodeDescVar[0].Description1;
+	payload.new_buildfeecode = flowVars.BFCodeDescVar[0].SecondItemNumber;
+}
+else
+{
+		payload.new_buildfeecodedescription = "";
+		payload.new_buildfeecode = "";
+}
+if(payload.new_dateinvoice == null || payload.new_dateinvoice == "")
+{
+       payload.remove("new_dateinvoice");
+}
+sessionVars.exceptionCausedPayload= payload;
+return payload;]]>
+    </expression-component>
+
+        <enricher doc:name="Message Enricher" target="#[flowVars.crmSysSerialNumberIdVar]">
+            <flow-ref name="SystemSerialNumber-Create-Sub-Flow" doc:name="SystemSerialNumber-Create-Sub-Flow"/>
+        </enricher>
+        <set-payload value="#[sessionVars.JDEBOMServicePayload]" doc:name="Reused  the JDE BOM response Payload"/>
+
+        <choice doc:name="Validate JDE BOM Items">
+            <when expression="#[payload.size() != 0 &amp;&amp; flowVars.invoiceDateVar != null]">
+                <foreach doc:name="For Each">
+                    <expression-component doc:name="Set Error Var">
+                    <![CDATA[sessionVars.code="103";
+sessionVars.message="Failed to query the Warranty Entity in CRM for the Record Id :"+flowVars.orginalPayloadVar.amc_name;
+sessionVars.flowName="Fetch-Warranty-from-CRM";]]>
+     </expression-component>
+                    <enricher target="#[flowVars.warrantyPayloadVar]" doc:name="Message Enricher">
+                        <flow-ref name="Fetch-Warranty-from-CRM" doc:name="Fetch-Warranty-from-CRM"/>
+                    </enricher>
+                    <logger message="2/ payload before transform #[payload] and #[message.dataType]" level="INFO" doc:name="Logger"/>
+                    <expression-component doc:name="Set Error Var"><![CDATA[sessionVars.code="102";
+sessionVars.message="Failed to map  the Entitlement Entity payload for the Item Number"+payload.SecondItemNumber+"  and Record Id :"+flowVars.orginalPayloadVar.amc_name;
+sessionVars.flowName="JDE-BOM-Service-Sub-Flow";]]></expression-component>
+				
+                    <dw:transform-message doc:name="Transform Message" metadata:id="149a8e20-3454-469a-84f8-6ecd52fbee28">
+                        <dw:input-payload mimeType="application/java"/>
+                        <dw:set-payload>
+                           <![CDATA[%dw 1.0
+%output application/java
+%var months = flowVars.warrantyPayloadVar.new_warrantydurationmonths as :number
+%var warrantyPeriod=("P" ++ months ++ "M") as :period
+
+---
+{
+	name : payload.SecondItemNumber,
+	new_originalwarrantycode : payload.SecondItemNumber,
+	customerid_referenceto_account  : flowVars.crmAccountId.accountid when flowVars.crmAccountId != "not matched" otherwise "",
+	new_accountnumber : flowVars.orginalPayloadVar.new_jdenumber,
+	new_serialnumberid_referenceto_amc_serialnumber :  flowVars.crmSysSerialNumberIdVar,
+	new_wonumber : flowVars.orginalPayloadVar.amc_name,
+	new_warrantyid_referenceto_new_warranty : flowVars.warrantyPayloadVar.new_warrantyid,
+	new_warrantycode : payload.SecondItemNumber,
+	startdate : flowVars.invoiceDateVar as :string {format :'yyyy-MM-dd'} as :date,
+	enddate : flowVars.invoiceDateVar as :string {format :'yyyy-MM-dd'} as :date + warrantyPeriod,
+	new_warrantydaysremaining : "",
+	ownerid_referenceto_systemuser : flowVars.defaultDomainUserIdVar.systemuserid,
+	statecode: 1,
+	//statuscode: 1,
+	description : flowVars.orginalPayloadVar.new_jdenumber ++ " Entitlement - " ++ flowVars.orginalPayloadVar.amc_name ++ " - " ++ payload.SecondItemNumber
+	
+}]]>
+     </dw:set-payload>
+                        <!-- <dw:input-payload doc:sample="sample_data\sampledate.dwl" /> -->
+                    </dw:transform-message>
+                    <logger message="2/ payload after transform #[payload] and #[message.dataType]" level="INFO" doc:name="Logger"/>
+                    <expression-component doc:name="Set Error Var">
+                      <![CDATA[sessionVars.code="103";
+sessionVars.message="Failed to Create the Entitlement in CRM for the Record Id :"+flowVars.orginalPayloadVar.amc_name;
+sessionVars.flowName="Create-Entitlement-in-CRM";
+sessionVars.exceptionCausedPayload= payload;]]>
+       </expression-component>
+                    <flow-ref name="Create-Entitlement-in-CRM" doc:name="Create-Entitlement-in-CRM"/>
+                </foreach>
+            </when>
+            <otherwise>
+                <logger message="No WF or WR or Invoice Date is null" level="INFO" doc:name="No WF or WR"/>
+                <expression-component doc:name="Add Note">
+                    <![CDATA[if(flowVars.orginalPayloadVar.SDIVD == null)
+{
+   flowVars.warrantyNote.add("From request received the  Invoice Date (SDIVD) is null, So skipped the creation of Entitlement entity for the record Id "+flowVars.orginalPayloadVar.amc_name);
+}
+else
+{
+	flowVars.warrantyNote.add(" From JDE BOM Service, didn't receive any WF or WR type Items for the System serial number "+flowVars.orginalPayloadVar.amc_name);
+}]]>
+      </expression-component>
+            </otherwise>
+        </choice>
+
+
+  </sub-flow>
+    <sub-flow name="Invoke-JDE-BOM-Service-SubFlow">
+        <http:request config-ref="HTTP_Request_Configuration_JDE_Bom" path="${jdebom.path}/{systemNumber}" method="GET" doc:name="Invoke JDE BOM Service">
+            <http:request-builder>
+                <http:uri-param paramName="systemNumber" value="#[flowVars.systemNumberVar]"/>
+
+            </http:request-builder>
+        </http:request>
+        <dw:transform-message doc:name="Transform Message" metadata:id="8cf0520d-d0c4-4159-b29b-0bbb4870d373">
+            <dw:input-payload doc:sample="JDEBomSample.json" mimeType="application/json"/>
+            <dw:set-payload>
+            <![CDATA[%dw 1.0
+%output application/java
+---
+{
+	jdeBomItem: payload.Data.jdeBomItem filter ($.SecondItemNumber[0..1] == "WF"
+		              or $.SecondItemNumber[0..1] == "WR") map ((jdeBomItem , indexOfJdeBomItem) -> {
+			OrderNumber: trim jdeBomItem.OrderNumber when jdeBomItem.OrderNumber != null otherwise "",
+			OrTy: trim jdeBomItem.OrTy when jdeBomItem.OrTy != null otherwise "",
+			OrderDate: trim jdeBomItem.OrderDate when jdeBomItem.OrderDate != null otherwise "",
+			InvoiceDate: trim jdeBomItem.InvoiceDate when jdeBomItem.InvoiceDate != null otherwise "",
+			LineNumber: trim jdeBomItem.LineNumber when jdeBomItem.LineNumber != null otherwise "",
+			LnTy: trim jdeBomItem.LnTy when jdeBomItem.LnTy != null otherwise "",
+			Quantity: trim jdeBomItem.Quantity when jdeBomItem.Quantity != null otherwise "",
+			UOM: trim jdeBomItem.UOM when jdeBomItem.UOM != null otherwise "",
+			SecondItemNumber: trim jdeBomItem.SecondItemNumber when jdeBomItem.SecondItemNumber != null otherwise "",
+			SpclOrder: trim jdeBomItem.SpclOrder when jdeBomItem.SpclOrder != null otherwise "",
+			Description1: trim jdeBomItem.Description1 when jdeBomItem.Description1 != null otherwise "",
+			DescriptionLine2: trim jdeBomItem.DescriptionLine2 when jdeBomItem.DescriptionLine2 != null otherwise "",
+			ThirdItemNumber: trim jdeBomItem.ThirdItemNumber when jdeBomItem.ThirdItemNumber != null otherwise "",
+			ProdCat: trim jdeBomItem.ProdCat when jdeBomItem.ProdCat != null otherwise "",
+			LastStatus: trim jdeBomItem.LastStatus when jdeBomItem.LastStatus != null otherwise "",
+			NextStatus: trim jdeBomItem.NextStatus when jdeBomItem.NextStatus != null otherwise "",
+			SoldTo: trim jdeBomItem.SoldTo when jdeBomItem.SoldTo != null otherwise "",
+			SoldToName: trim jdeBomItem.SoldToName when jdeBomItem.SoldToName != null otherwise "",
+			ShipTo: trim jdeBomItem.ShipTo when jdeBomItem.ShipTo != null otherwise "",
+			RelOrdType: trim jdeBomItem.RelOrdType when jdeBomItem.RelOrdType != null otherwise "",
+			LotSerialNumber: trim jdeBomItem.LotSerialNumber when jdeBomItem.LotSerialNumber != null otherwise "",
+			ShipmentNumber: trim jdeBomItem.ShipmentNumber when jdeBomItem.ShipmentNumber != null otherwise "",
+			ModTrn: trim jdeBomItem.ModTrn when jdeBomItem.ModTrn != null otherwise "",
+			OrderCo: trim jdeBomItem.OrderCo when jdeBomItem.OrderCo != null otherwise "",
+			SellingBranch: trim jdeBomItem.SellingBranch when jdeBomItem.SellingBranch != null otherwise "",
+			BuildingBranch: trim jdeBomItem.BuildingBranch when jdeBomItem.BuildingBranch != null otherwise "",
+			ExtendedAmount: trim jdeBomItem.ExtendedAmount when jdeBomItem.ExtendedAmount != null otherwise "",
+			CustomerPO: trim jdeBomItem.CustomerPO when jdeBomItem.CustomerPO != null otherwise "",
+			DocumentNumber: trim jdeBomItem.DocumentNumber when jdeBomItem.DocumentNumber != null otherwise "",
+			DocTy: trim jdeBomItem.DocTy when jdeBomItem.DocTy != null otherwise "",
+			ActualShip: trim jdeBomItem.ActualShip when jdeBomItem.ActualShip != null otherwise "",
+			QuantityOrdered: trim jdeBomItem.QuantityOrdered when jdeBomItem.QuantityOrdered != null otherwise "",
+			QuantityShipped: trim jdeBomItem.QuantityShipped when jdeBomItem.QuantityShipped != null otherwise "",
+			QuantityBackordered: trim jdeBomItem.QuantityBackordered when jdeBomItem.QuantityBackordered != null otherwise ""
+	})
+	
+}]]>
+    </dw:set-payload>
+	<dw:set-variable variableName="BFCodeDescVar">
+	<![CDATA[%dw 1.0
+%output application/java
+---
+payload.Data.jdeBomItem filter $.SecondItemNumber[0..1] == "BF"
+		              map ((jdeBomItem , indexOfJdeBomItem) -> {
+			SecondItemNumber: trim jdeBomItem.SecondItemNumber when jdeBomItem.SecondItemNumber != null otherwise "",
+			Description1: trim jdeBomItem.Description1 when jdeBomItem.Description1 != null otherwise ""
+		})
+	
+]]>
+     </dw:set-variable>
+        </dw:transform-message>
+        <expression-transformer expression="#[payload.jdeBomItem]" doc:name="Segregate jdeBomItem"/>
+    </sub-flow>
+<sub-flow name="SystemSerialNumber-Create-Sub-Flow">
+
+    <enricher target="#[variable:recordExists]" doc:name="Record Exist">
+      <processor-chain doc:name="Processor Chain">
+        <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot; count=&quot;1&quot; &gt;
+    &lt;entity name=&quot;amc_serialnumber&quot; &gt;
+        &lt;filter type=&quot;and&quot; &gt;
+            &lt;condition attribute=&quot;amc_name&quot; operator=&quot;eq&quot; value=&quot;#[payload.amc_name]&quot; /&gt;
+            &lt;condition attribute=&quot;new_jdenumber&quot; operator=&quot;eq&quot; value=&quot;#[payload.new_jdenumber]&quot; /&gt;
+            &lt;condition attribute=&quot;new_salesordernumber&quot; operator=&quot;eq&quot; value=&quot;#[payload.new_salesordernumber]&quot; /&gt;
+        &lt;/filter&gt;
+    &lt;/entity&gt;
+&lt;/fetch&gt;" doc:name="Query CRM"/>
+        <set-payload value="#[payload.hasNext() ? payload.next(): &quot;not matched&quot;]" doc:name="Set CRM Response as Payload"/>
+      </processor-chain>
+
+    </enricher>
+    <choice doc:name="Validate the insert status">
+      <when expression="#[recordExists ==&quot;not matched&quot;]">
+        <dynamicscrm:create config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" logicalName="amc_serialnumber" doc:name="Create SysSerial in CRM"/>
+
+
+      </when>
+      <otherwise>
+        <logger message="Record ID: #[recordExists.amc_name] already exists in CRM :::  " level="INFO" doc:name="update"/>
+                <dw:transform-message doc:name="Transform Message">
+                <dw:input-payload mimeType="application/java"/>
+                    <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+	new_buildfeecodedescription: payload.new_buildfeecodedescription,
+	new_buildfeecode: payload.new_buildfeecode,
+	new_customer_referenceto_account: payload.new_customer_referenceto_account
+}]]></dw:set-payload>
+                </dw:transform-message>
+                <dynamicscrm:update config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" id="#[recordExists.amc_serialnumberid]" logicalName="amc_serialnumber" doc:name="Microsoft Dynamics CRM"/>
+        <expression-component doc:name="Add SerialNumber Id to Payload">
+          <![CDATA[payload = recordExists.amc_serialnumberid;
+//flowVars.warrantyNote.add(recordExists.amc_name +" System Number already exists in CRM, skipped");]]>
+        </expression-component>
+                
+      </otherwise>
+    </choice>
+
+  </sub-flow>
+
+  <sub-flow name="Fetch-Warranty-from-CRM">
+
+
+    <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot;&gt;&lt;entity name=&quot;new_warranty&quot;&gt;&lt;attribute name=&quot;new_warrantydurationmonths&quot; /&gt;&lt;attribute name=&quot;new_warrantyid&quot; /&gt;&lt;filter&gt;&lt;condition attribute=&quot;new_itemnumber&quot; operator=&quot;eq&quot; value=&quot;#[payload.SecondItemNumber]&quot; /&gt;&lt;/filter&gt;&lt;/entity&gt;&lt;/fetch&gt;" doc:name="Microsoft Dynamics CRM"/>
+    <set-payload value="#[payload.hasNext() ? payload.next() : &quot;not matched&quot;]" doc:name="Set CRM response as Payload"/>
+
+  </sub-flow>
+  <sub-flow name="Create-Entitlement-in-CRM">
+
+    <enricher target="#[flowVars.verifyEntitlement]" doc:name="Message Enricher">
+      <processor-chain doc:name="Processor Chain">
+        <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot;&gt;&lt;entity name=&quot;entitlement&quot;&gt;&lt;attribute name=&quot;entitlementid&quot; /&gt;&lt;filter&gt;&lt;filter type=&quot;and&quot;&gt;&lt;condition attribute=&quot;new_warrantycode&quot; operator=&quot;eq&quot; value=&quot;#[payload.name]&quot; /&gt;&lt;condition attribute=&quot;new_originalwarrantycode&quot; operator=&quot;eq&quot; value=&quot;#[payload.name]&quot; /&gt;&lt;condition attribute=&quot;new_serialnumberid&quot; operator=&quot;eq&quot; value=&quot;#[flowVars.crmSysSerialNumberIdVar]&quot; /&gt;&lt;/filter&gt;&lt;/filter&gt;&lt;/entity&gt;&lt;/fetch&gt;" doc:name="Fetch Warranty already exist in Entitlement - CRM"/>
+        <set-payload value="#[payload.hasNext() ? payload.next() : &quot;not matched&quot;]" doc:name="Set CRM Response as Payload"/>
+      </processor-chain>
+    </enricher>
+
+    <choice doc:name="Validate Entitlement exists or not">
+      <when expression="#[flowVars.verifyEntitlement == &quot;not matched&quot; &amp;&amp; flowVars.warrantyPayloadVar.new_warrantydurationmonths != null]">
+
+        <dynamicscrm:create config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" logicalName="entitlement" doc:name="Create Entitlement in CRM"/>
+      </when>
+      <otherwise>
+        <expression-component doc:name="Add Note">
+          <![CDATA[
+// Add a note if the warranty code doesn't exist in CRM     
+if(flowVars.warrantyPayloadVar.new_warrantydurationmonths == null)
+{
+	System.out.println("Inside Note for warranty not existed");
+   flowVars.warrantyNote.add("The warranty didn't exist in CRM for the warranty code :"+payload.name);
+} 
+else
+{
+  flowVars.warrantyNote.add("Entitlement already existed for the warranty code :"+payload.name + " So skipped the duplicate creation in CRM");
+  
+}]]>
+        </expression-component>
+      </otherwise>
+    </choice>
+
+
+  </sub-flow>
+
+  <sub-flow name="SysemSerialNumber-Note">
+    <expression-component doc:name="Set the Note to Payload">
+      <![CDATA[sessionVars.code="103";
+sessionVars.message="Failed to create the Note in CRM for the Record Id :"+flowVars.orginalPayloadVar.amc_name;
+sessionVars.flowName="SysemSerialNumber-Note";
+
+String listNote = flowVars.warrantyNote.toString();
+String replaceStr=listNote.replaceAll("\\[|\\]", "");
+return payload=replaceStr;]]>
+    </expression-component>
+    <dw:transform-message doc:name="Transform Message">
+      <dw:input-payload mimeType="application/java"/>
+      <dw:set-payload>
+        <![CDATA[%dw 1.0
+%output application/java
+---
+{
+      notetext: 'System Serial Number Note :' ++ trim payload as :string,
+      objecttypecode : p('annotation.typecode') as :number,
+      mimetype: 'text/plain',      
+      isdocument: true,
+      ownerid_referenceto_systemuser: flowVars.defaultDomainUserIdVar.systemuserid,
+      objectid_referenceto_amc_serialnumber: flowVars.crmSysSerialNumberIdVar
+     
+
+}]]>
+      </dw:set-payload>
+    </dw:transform-message>
+        <expression-component doc:name="Set Error Var">
+             <![CDATA[sessionVars.exceptionCausedPayload= payload;]]>
+         </expression-component>
+
+    <dynamicscrm:create config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" logicalName="annotation" doc:name="Create new Note in CRM"/>
+  </sub-flow>
+
+
+</mule>

@@ -1,0 +1,757 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:dynamicscrm="http://www.mulesoft.org/schema/mule/dynamicscrm" xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:schedulers="http://www.mulesoft.org/schema/mule/schedulers" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" 
+	xmlns:json="http://www.mulesoft.org/schema/mule/json"
+	xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/dynamicscrm http://www.mulesoft.org/schema/mule/dynamicscrm/current/mule-dynamicscrm.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mule/schedulers/current/mule-schedulers.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd">
+    <!-- <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8082" doc:name="HTTP Listener Configuration"/> --> 
+    
+
+  <flow name="Recursive_CaseSubmission_Flow">
+    <choice doc:name="Check if last page reached">
+      <when expression="#[sessionVars.sv_total_pages &gt; 0]">
+        <logger message=" #['current page:  ' + sessionVars.sv_total_pages]" level="INFO" doc:name="Print current page number"/>
+        <flow-ref name="getMessageToQueue_SubFlow" doc:name="getMessageToQueue_SubFlow"/>
+      </when>
+      <otherwise>
+        <logger message="Last page reached, skip" level="INFO" doc:name="Last page reached, skip"/>
+      </otherwise>
+    </choice>
+  </flow>
+  <sub-flow name="getMessageToQueue_SubFlow" >
+        <!-- <http:listener config-ref="HTTP_Listener_Configuration" path="/*" doc:name="HTTP"/> -->
+        <!-- <http:listener config-ref="HTTP_Listener_Configuration" path="/" doc:name="HTTP"/> -->
+        
+        <logger message="Case : lastrun_update: #[flowVars.fv_last_run_update == null? flowVars.fv_last_run:flowVars.fv_last_run_update]" level="INFO" doc:name="Logger"/>
+           
+  <http:request config-ref="HTTP_Request_Configuration" path="${api.path.getSubmissionByCreatedDate}" method="GET" doc:name="HTTP">
+      <http:request-builder>
+                <http:query-param paramName="start" value="#[flowVars.fv_last_run_update == null? flowVars.fv_last_run:flowVars.fv_last_run_update]"/>
+                <http:query-param paramName="end" value="${enddate}"/>
+                <http:query-param paramName="datetype" value="${datetype}"/>
+                <http:query-param paramName="page" value="#[sessionVars.sv_total_pages]"/>
+
+
+
+      </http:request-builder>
+    </http:request>  
+    <dw:transform-message doc:name="Transform Message" metadata:id="3e211bce-ad91-4734-bd90-615083f74b85">
+      <dw:input-payload mimeType="application/json" doc:sample="CaseSearch.json"/>
+      <dw:set-payload>
+        <![CDATA[%dw 1.0
+%output application/json
+---
+payload.data map ((payload01, indexOfPayload01) -> {
+
+	case_submission: {
+		account_name: payload01.account_name when  payload01.account_name != null otherwise "",
+		account_number: payload01.account_number when payload01.account_number != null otherwise "",
+		admin_user: payload01.admin_user when payload01.admin_user != null otherwise "",
+		case_submission_id: payload01.case_submission_id when payload01.case_submission_id != null otherwise "",
+		created_date: payload01.created_date when payload01.created_date != null otherwise "",
+		crm_case_id: payload01.crm_case_id when payload01.crm_case_id != null otherwise "",
+		email: payload01.email when payload01.email != null otherwise "",
+		first_name: payload01.first_name when payload01.first_name != null otherwise "",
+		is_login: payload01.is_login when payload01.is_login != null otherwise "",
+		last_name: payload01.last_name when payload01.last_name != null otherwise "",
+		part_number: payload01.part_number when payload01.part_number != null otherwise "",
+		phone: payload01.phone when payload01.phone != null otherwise "",
+		problem_description: payload01.problem_description when payload01.problem_description != null otherwise "",
+		reported_reason: payload01.reported_reason when payload01.reported_reason != null otherwise "",
+		serial_number: payload01.serial_number when payload01.serial_number != null otherwise "",
+		source: payload01.source when payload01.source != null otherwise "",
+		updated_date: payload01.updated_date when payload01.updated_date != null otherwise "",
+		reference_doc_url: payload01.reference_doc_url map ((referencedocurl , indexOfReferencedocurl) -> {
+			subject: referencedocurl.subject when referencedocurl.subject != null otherwise "",
+			url: referencedocurl.url when referencedocurl.url != null otherwise ""
+		}),
+		reference_numbers: payload01.reference_numbers map {
+			reference_number : $.reference_number when $.reference_number != null otherwise "",
+			reference_number_type: $.reference_number_type when $.reference_number_type != null otherwise ""
+		},
+		created_by: payload01.created_by when payload01.created_by != null otherwise "",
+		email_cc: payload01.email_cc when payload01.email_cc != null otherwise "",
+		crm_case_number: payload01.crm_case_number when payload01.crm_case_number != null otherwise "",
+		rma: {
+			rma_id : payload01.rma.rma_id when payload01.rma.rma_id != null and (upper payload01.rma.rma_id) != "NO" otherwise "",
+			shipto_address: {
+				attention_name: payload01.rma.shipto_address.attention_name when payload01.rma.shipto_address.attention_name != null and (upper payload01.rma.shipto_address.attention_name) != "NO" otherwise "",
+				location_name: payload01.rma.shipto_address.location_name when payload01.rma.shipto_address.location_name != null and (upper payload01.rma.shipto_address.location_name) != "NO" otherwise "",
+				phone_number: payload01.rma.shipto_address.phone_number when payload01.rma.shipto_address.phone_number != null and (upper payload01.rma.shipto_address.phone_number) != "NO" otherwise "",
+				email: payload01.rma.shipto_address.email when payload01.rma.shipto_address.email != null and (upper payload01.rma.shipto_address.email) != "NO" otherwise "",
+				address_line_1: payload01.rma.shipto_address.address_line_1 when payload01.rma.shipto_address.address_line_1 != null and (upper payload01.rma.shipto_address.address_line_1) != "NO" otherwise "",
+				address_line_2: payload01.rma.shipto_address.address_line_2 when payload01.rma.shipto_address.address_line_2 != null and (upper payload01.rma.shipto_address.address_line_2) != "NO" otherwise "",
+				address_line_3: payload01.rma.shipto_address.address_line_3 when payload01.rma.shipto_address.address_line_3 != null and (upper payload01.rma.shipto_address.address_line_3) != "NO" otherwise "",
+				address_line_4: payload01.rma.shipto_address.address_line_4 when payload01.rma.shipto_address.address_line_4 != null and (upper payload01.rma.shipto_address.address_line_4) != "NO" otherwise "",
+				city: payload01.rma.shipto_address.city when payload01.rma.shipto_address.city != null and (upper payload01.rma.shipto_address.city) != "NO" otherwise "",
+				company_name: payload01.rma.shipto_address.company_name when payload01.rma.shipto_address.company_name != null and (upper payload01.rma.shipto_address.company_name) != "NO" otherwise "",
+				state: payload01.rma.shipto_address.state when payload01.rma.shipto_address.state != null and (upper payload01.rma.shipto_address.state) != "NO" otherwise "",
+				country: payload01.rma.shipto_address.country when payload01.rma.shipto_address.country != null and (upper payload01.rma.shipto_address.country) != "NO" otherwise "",
+				zip: payload01.rma.shipto_address."zip" when payload01.rma.shipto_address."zip" != null and (upper payload01.rma.shipto_address."zip") != "NO" otherwise ""
+			},
+			workto_address: {
+				attention_name: payload01.rma.workto_address.attention_name when payload01.rma.workto_address.attention_name != null and (upper payload01.rma.workto_address.attention_name) != "NO" otherwise "",
+				location_name: payload01.rma.workto_address.location_name when payload01.rma.workto_address.location_name != null and (upper payload01.rma.workto_address.location_name) != "NO" otherwise "",
+				phone_number: payload01.rma.workto_address.phone_number when payload01.rma.workto_address.phone_number != null and (upper payload01.rma.workto_address.phone_number) != "NO" otherwise "",
+				email: payload01.rma.workto_address.email when payload01.rma.workto_address.email != null and (upper payload01.rma.workto_address.email) != "NO" otherwise "",
+				address_line_1: payload01.rma.workto_address.address_line_1 when payload01.rma.workto_address.address_line_1 != null and (upper payload01.rma.workto_address.address_line_1) != "NO" otherwise "",
+				address_line_2: payload01.rma.workto_address.address_line_2 when payload01.rma.workto_address.address_line_2 != null and (upper payload01.rma.workto_address.address_line_2) != "NO" otherwise "",
+				address_line_3: payload01.rma.workto_address.address_line_3 when payload01.rma.workto_address.address_line_3 != null and (upper payload01.rma.workto_address.address_line_3) != "NO" otherwise "",
+				address_line_4: payload01.rma.workto_address.address_line_4 when payload01.rma.workto_address.address_line_4 != null and (upper payload01.rma.workto_address.address_line_4) != "NO" otherwise "",
+				city: payload01.rma.workto_address.city when payload01.rma.workto_address.city != null and (upper payload01.rma.workto_address.city) != "NO" otherwise "",
+				state: payload01.rma.workto_address.state when payload01.rma.workto_address.state != null and (upper payload01.rma.workto_address.state) != "NO" otherwise "",
+				country: payload01.rma.workto_address.country when payload01.rma.workto_address.country != null and (upper payload01.rma.workto_address.country) != "NO" otherwise "",
+				zip: payload01.rma.workto_address."zip" when payload01.rma.workto_address."zip" != null and (upper payload01.rma.workto_address."zip") != "NO" otherwise ""
+			},
+			rma_item: payload01.rma.rma_item map ((rmaitem , indexOfRmaitem) -> {
+				part_desc: rmaitem.part_desc when rmaitem.part_desc != null otherwise "",
+				part_number: rmaitem.part_number when rmaitem.part_number != null otherwise "",
+				quantity: rmaitem.quantity when rmaitem.quantity != null otherwise "",
+				rma_item_id : rmaitem.rma_item_id when rmaitem.rma_item_id != null otherwise "",
+        comments : rmaitem.comments when rmaitem.comments != null otherwise ""
+			})
+		}
+	}
+})]]>
+      </dw:set-payload>
+    </dw:transform-message>
+    <json:json-to-object-transformer returnClass="java.util.List" doc:name="JSON to Object List"/>
+        <!-- <enricher target="#[flowVars.fv_trigger_time]" doc:name="Message Enricher">
+            <expression-component doc:name="Validate created_date format"><![CDATA[import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+SimpleDateFormat outSDF = new SimpleDateFormat("yyyy-MM-dd");
+
+String dateInString = payload[0].case_submission.created_date;   
+
+Date date = formatter.parse(dateInString);
+outDate = outSDF.format(date);
+System.out.println(outDate);
+System.out.println(formatter.format(date));
+return payload=outDate;]]></expression-component>
+        </enricher> -->
+
+    <logger message="Start inserting Case Submisison messages to queue date" level="INFO" doc:name="Start inserting Case Submisison messages to queue"/>
+
+    <foreach counterVariableName="case_count" doc:name="For Each Sales Summary">
+      <set-payload value="#[payload.case_submission]" doc:name="Current Case Submission"/>
+            <set-variable variableName="fv_crm_case_number" value="#[payload.crm_case_number]" doc:name="fv_crm_case_number"/>
+      <logger message="Case  #[flowVars.case_count]:  #[payload]" level="INFO" doc:name="Current Record Info"/>
+      <jms:outbound-endpoint queue="${case_submission_queue}" connector-ref="Active_MQ" doc:name="case_submission_queue"/>
+            <logger message="Start get notes associate with current case: #[flowVars.fv_crm_case_number]" level="INFO" doc:name="Start get notes associate with current case"/>
+            <choice doc:name="Check if crm case number exists">
+                <when expression="#[flowVars.fv_crm_case_number != null]">
+                    <http:request config-ref="HTTP_Request_Configuration" path="${api.path.getNoteByCaseNumber}" method="GET" doc:name="HTTP">
+                        <http:request-builder>
+                            <http:query-param paramName="page" value="1"/>
+                        </http:request-builder>
+                    </http:request>
+                    <dw:transform-message doc:name="Transform Message">
+                    <dw:input-payload mimeType="application/json"/>
+                        <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload.data map ((payload01 , indexOfPayload01) -> {
+   case_notes: {
+    crm_case_number: payload01.crm_case_number,
+    created_by: payload01.created_by,
+    case_note_id: payload01.case_note_id,
+    created_date: payload01.created_date,
+    note: payload01.note
+
+	}
+})]]></dw:set-payload>
+                    </dw:transform-message>
+                    <json:json-to-object-transformer returnClass="java.util.List" doc:name="JSON to Object"/>
+                    <foreach counterVariableName="note_count" doc:name="For Each">
+                        <set-payload value="#[payload.case_notes]" doc:name="Set Payload"/>
+                        <logger message="Note  #[flowVars.note_count]:  #[payload]" level="INFO" doc:name="Current Record Info"/>
+                        <jms:outbound-endpoint queue="${case_note_queue}" connector-ref="Active_MQ" doc:name="case_note_queue"/>
+                    </foreach>
+                </when>
+                <otherwise>
+                    <logger message="no crm_case_number, so there is no note to retrieve" level="INFO" doc:name="no crm_case_number, so there is no note to retrieve"/>
+                </otherwise>
+            </choice>
+    </foreach>
+        <set-session-variable variableName="sv_total_pages" value="#[sv_total_pages - 1]" doc:name="sv_total_pages"/>
+        <flow-ref name="Recursive_CaseSubmission_Flow" doc:name="Recursive_CaseSubmission_Flow"/>
+
+  </sub-flow>
+
+
+  <flow name="CaseSubmission_to_queue" initialState="started" processingStrategy="synchronous">
+         
+     <poll doc:name="Poll">
+      <fixed-frequency-scheduler frequency="1" timeUnit="HOURS"/>
+      <watermark variable="fv_last_run" default-expression="${default_starttime}" update-expression="#[flowVars.fv_last_run_update]"/>
+      <processor-chain doc:name="Processor Chain">
+
+        <logger message="Start polling Case Submissions from API - Start = #[flowVars.fv_last_run_update == null? flowVars.fv_last_run:flowVars.fv_last_run_update], End = ${enddate}" level="INFO" doc:name="Start polling Case Submissions from API "/>
+        <http:request config-ref="HTTP_Request_Configuration" path="${api.path.getSubmissionByCreatedDate}" method="GET" doc:name="HTTP Get">
+          <http:request-builder>
+                        <http:query-param paramName="start" value="#[flowVars.fv_last_run_update == null? flowVars.fv_last_run:flowVars.fv_last_run_update]"/>
+                        <http:query-param paramName="end" value="${enddate}"/>
+                        <http:query-param paramName="datetype" value="${datetype}"/>
+
+
+          </http:request-builder>
+        </http:request>
+      </processor-chain>
+    </poll>
+    <logger message="Result from API : #[payload] " level="INFO" doc:name="Result from API"/>
+
+    <json:json-to-object-transformer returnClass="java.util.HashMap" doc:name="JSON to Hash Map"/>
+    <set-session-variable variableName="sv_total_pages" value="#[payload.total_pages]" doc:name="sv_total_pages"/>
+    <set-session-variable variableName="sv_max_created_date" value="#[payload.data.size() == 0 ? flowVars.fv_last_run:payload.data[0].created_date]" doc:name="sv_max_created_date"/>
+    <flow-ref name="Recursive_CaseSubmission_Flow" doc:name="Recursive_CaseSubmission_Flow"/>
+
+    <set-variable variableName="fv_last_run_update" value="#[sessionVars.sv_max_created_date]" doc:name="fv_last_run_update"/>
+
+    <logger message="Finished inserting Case Submission messages into queue. The last run update time is: #[flowVars.fv_last_run_update], this will be used as the start time for the next poll" level="INFO" doc:name="Finished!"/>
+    <exception-strategy ref="Catch_Exception_Handling1" doc:name="Reference Exception Strategy"/>
+  </flow>
+
+  <flow name="CaseSubmission_to_crm" initialState="started" processingStrategy="synchronous">
+    <jms:inbound-endpoint doc:name="case_submission_queue" connector-ref="Active_MQ" queue="${case_submission_queue}">
+      <jms:transaction action="ALWAYS_BEGIN"/>
+    </jms:inbound-endpoint>
+        <json:json-to-object-transformer returnClass="java.util.Map" doc:name="JSON to Object"/>
+    <logger message="1. Get case submission message from queue: #[payload]" level="INFO" doc:name="1. Get case submission message from queue"/>
+
+    <set-session-variable variableName="sv_note" value="#[new java.util.HashSet()]" doc:name="sv_note"/>
+        <expression-component doc:name="Add Note"><![CDATA[ sessionVars.sv_note.add("Integration Program Note");]]></expression-component>
+    <set-session-variable variableName="sv_current_case_submission" value="#[payload]" doc:name="sv_current_case_submission"/>
+        <logger message="Get contact info by email" level="INFO" doc:name="Get contact info by email"/>
+        <!-- <enricher target="#[flowVars.accountInfoId]" doc:name="accountInfoId">
+            <flow-ref name="lookup-AccountId" doc:name="lookup-AccountId"/>
+        </enricher>
+        <enricher target="#[flowVars.contactInfoId]" doc:name="contactInfoId">
+            <flow-ref name="lookup-EmailVerify-Contact" doc:name="lookup-EmailVerify-Contact"/>
+        </enricher>
+        <enricher target="#[flowVars.serialNumber]" doc:name="serialNumber">
+            <flow-ref name="lookup-SerialNumber" doc:name="lookup-SerialNumber"/>
+        </enricher> -->
+
+        <flow-ref name="lookup-contactByEmail" doc:name="lookup-contactByEmail"/>
+        <choice doc:name="Check if System Serial Exists">
+            <when expression="#[sessionVars.sv_current_case_submission.serial_number != null and sessionVars.sv_current_case_submission.serial_number != '']">
+                <logger message="Get System Serial info by Serial number" level="INFO" doc:name="Get System Serial info by Serial number"/>
+                <flow-ref name="lookup-SystemSerialBySystemSerialNumber" doc:name="lookup-SystemSerialBySystemSerialNumber"/>
+                <expression-component doc:name="Note Expression"><![CDATA[if (sessionVars.sv_system_serial_info.new_customer_referenceto_account != sessionVars.sv_contactInfo.parentcustomerid_referenceto_account)
+{
+	 sessionVars.sv_note.add("Account Found From Current System Serial and Contact Are Not Matched");
+}]]></expression-component>
+                <dw:transform-message doc:name="fv_contactAccount">
+                <dw:input-payload mimeType="application/java"/>
+                    <dw:set-variable variableName="fv_contactAccount"><![CDATA[%dw 1.0
+%output application/java
+---
+using(
+	defaultAccountInfo = lookup("lookup-defaultaccountinfo", {
+	id: 0
+})
+)
+{
+	accountid: sessionVars.sv_system_serial_info.new_customer_referenceto_account when (sessionVars.sv_system_serial_info != '' and sessionVars.sv_system_serial_info != null) otherwise
+			   sessionVars.sv_contactInfo.parentcustomerid_referenceto_account when (sessionVars.sv_contactInfo != '' and sessionVars.sv_contactInfo != null) otherwise
+			   defaultAccountInfo[0].accountid,
+	
+	accountnumber: sessionVars.sv_system_serial_info.new_jdenumber when (sessionVars.sv_system_serial_info != '' and sessionVars.sv_system_serial_info != null) otherwise
+			   sessionVars.sv_contactInfo.accountnumber when (sessionVars.sv_contactInfo != '' and sessionVars.sv_contactInfo != null) otherwise "",
+	contactid: sessionVars.sv_contactInfo.contactid when (sessionVars.sv_contactInfo != '' and sessionVars.sv_contactInfo != null and sessionVars.sv_system_serial_info.new_customer_referenceto_account == sessionVars.sv_contactInfo.parentcustomerid_referenceto_account) otherwise ""		   
+	
+	
+}]]></dw:set-variable>
+                </dw:transform-message>
+            </when>
+            <otherwise>
+                <logger message="System Serial is empty, check Account Number" level="INFO" doc:name="System Serial is empty, check Account Number"/>
+                <choice doc:name="Check if Account Number exists">
+                    <when expression="#[sessionVars.sv_current_case_submission.account_number != null and sessionVars.sv_current_case_submission.account_number != '']">
+                        <logger message="Get Account info by Account Number" level="INFO" doc:name="Get Account info by Account Number"/>
+                        <flow-ref name="lookup-AccountByAccountNumber" doc:name="lookup-AccountByAccountNumber"/>
+                        <expression-component doc:name="Note Expression"><![CDATA[if (sessionVars.sv_accountInfo.accountid != sessionVars.sv_contactInfo.parentcustomerid_referenceto_account)
+{
+	 sessionVars.sv_note.add("Account Found From Current Account Number and Contact Are Not Matched");
+}]]></expression-component>
+                        <dw:transform-message doc:name="fv_contactAccount">
+                        <dw:input-payload mimeType="application/java"/>
+                            <dw:set-variable variableName="fv_contactAccount"><![CDATA[%dw 1.0
+%output application/java
+---
+using(
+	defaultAccountInfo = lookup("lookup-defaultaccountinfo", {
+	id: 0
+})
+)
+{
+	accountid: sessionVars.sv_accountInfo.accountid when (sessionVars.sv_accountInfo != '' and sessionVars.sv_accountInfo != null) otherwise
+			   sessionVars.sv_contactInfo.parentcustomerid_referenceto_account when (sessionVars.sv_contactInfo != '' and sessionVars.sv_contactInfo != null) otherwise
+			   defaultAccountInfo[0].accountid,
+	
+	accountnumber: sessionVars.sv_accountInfo.accountnumber when (sessionVars.sv_accountInfo != '' and sessionVars.sv_accountInfo != null) otherwise
+			   sessionVars.sv_contactInfo.accountnumber when (sessionVars.sv_contactInfo != '' and sessionVars.sv_contactInfo != null) otherwise
+			   "",
+	contactid: sessionVars.sv_contactInfo.contactid when (sessionVars.sv_contactInfo != '' and sessionVars.sv_contactInfo != null and sessionVars.sv_accountInfo.accountid == sessionVars.sv_contactInfo.parentcustomerid_referenceto_account) otherwise ""		   
+	
+	
+}]]></dw:set-variable>
+                        </dw:transform-message>
+                    </when>
+                    <otherwise>
+                        <logger message="Account Number is empty" level="INFO" doc:name="Account Number is empty"/>
+                        <expression-component doc:name="Note Expression"><![CDATA[sessionVars.sv_note.add("System Serial And Account Not Found, Use Account Associate With Current Contact");]]></expression-component>
+                        <dw:transform-message doc:name="fv_contactAccount">
+                        <dw:input-payload mimeType="application/java"/>
+                            <dw:set-variable variableName="fv_contactAccount"><![CDATA[%dw 1.0
+%output application/java
+---
+using(
+	defaultAccountInfo = lookup("lookup-defaultaccountinfo", {
+	id: 0
+})
+)
+{
+	accountid: sessionVars.sv_contactInfo.parentcustomerid_referenceto_account when (sessionVars.sv_contactInfo != '' and sessionVars.sv_contactInfo != null) otherwise
+			   defaultAccountInfo[0].accountid,	
+	accountnumber: sessionVars.sv_contactInfo.accountnumber when (sessionVars.sv_contactInfo != '' and sessionVars.sv_contactInfo != null) otherwise "",
+	contactid: sessionVars.sv_contactInfo.contactid when (sessionVars.sv_contactInfo != '' and sessionVars.sv_contactInfo != null) otherwise ""		   
+	
+	
+}]]></dw:set-variable>
+                        </dw:transform-message>
+                    </otherwise>
+                </choice>
+            </otherwise>
+        </choice> 
+        <enricher target="#[flowVars.defaultUser]" doc:name="defaultUser">
+            <flow-ref name="lookup-default-user" doc:name="lookup-default-user"/>
+        </enricher>
+
+
+    <dw:transform-message doc:name="Transform CRM Case">
+      <dw:input-payload mimeType="application/java"/>
+      <dw:set-payload>
+        <![CDATA[%dw 1.0
+%output application/java
+---
+{
+	//account
+	customerid_referenceto_account: flowVars.fv_contactAccount.accountid when (flowVars.fv_contactAccount.accountid != null and flowVars.fv_contactAccount.accountid != "") otherwise "",
+	new_customernumber: flowVars.fv_contactAccount.accountnumber when (flowVars.fv_contactAccount.accountnumber != null and flowVars.fv_contactAccount.accountnumber != "") otherwise "",
+	ownerid_referenceto_systemuser: flowVars.defaultUser.systemuserid,
+	//contact
+	primarycontactid_referenceto_contact: flowVars.fv_contactAccount.contactid when (flowVars.fv_contactAccount.contactid != null and flowVars.fv_contactAccount.contactid != "") otherwise "",
+	am_customerid_contact_referenceto_contact: flowVars.fv_contactAccount.contactid when (flowVars.fv_contactAccount.contactid != null and flowVars.fv_contactAccount.contactid != "") otherwise "",
+	new_serialnumberid_referenceto_amc_serialnumber: sessionVars.sv_system_serial_info.amc_serialnumberid when (sessionVars.sv_system_serial_info != '' and sessionVars.sv_system_serial_info != null) otherwise '',
+	
+	title: 'SSS 7x24x365 Case Submission' when payload.source == 'Source Support' otherwise
+		   'GGC Case Submission' when payload.source == 'Google' otherwise
+		   payload.source ++ ' - Web Form Submission',
+	
+	statuscode: 1,
+	new_reportedreason: 100000012 when payload.reported_reason == 'Failed Component' otherwise
+						100000000 when payload.reported_reason == 'Customer Order Error' otherwise
+						100000001 when payload.reported_reason == 'Customer Changed Mind' otherwise
+						279640000 when payload.reported_reason == 'Customer Rework' otherwise
+						100000002 when payload.reported_reason == 'Sales Error' otherwise
+						100000003 when payload.reported_reason == 'Shipping Damage' otherwise
+						100000004 when payload.reported_reason == 'Assembly Issue' otherwise
+						100000005 when payload.reported_reason == 'DOA' otherwise
+						100000006 when payload.reported_reason == 'Delivery Problem' otherwise
+						100000007 when payload.reported_reason == 'Wrong Product Shipped' otherwise
+						100000008 when payload.reported_reason == 'Missing Product' otherwise
+						100000009 when payload.reported_reason == 'Extra Product' otherwise
+						100000010 when payload.reported_reason == 'Hardware Incompatibility' otherwise
+						100000011 when payload.reported_reason == 'Software Incompatibility' otherwise '',
+	new_casenotes: payload.problem_description,
+
+	//8 - Source Support, 9 - Customer Api, 2 - Web
+	caseorigincode: 100000008 when payload.source == 'Source Support' otherwise 
+					100000009 when payload.source == 'Customer API' otherwise 
+					100000001 when payload.source == 'Equus' or payload.source == 'Servers Direct' otherwise  "", 
+	new_webformsource: 279640000 when payload.source == 'Equus' otherwise 
+				   	   279640001 when payload.source == 'Servers Direct' otherwise "",
+	
+	ticketnumber: payload.crm_case_number,
+	new_requestedby: payload.created_by
+	
+}]]>
+      </dw:set-payload>
+            <dw:set-variable variableName="refNoTypeVar"><![CDATA[%dw 1.0
+%output application/java
+---
+//ticket 43
+(p('ref_nos_type') splitBy ",")]]></dw:set-variable>
+    </dw:transform-message>
+        <enricher target="#[flowVars.caseExists]" doc:name="caseExists">
+            <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot; &gt;
+    &lt;entity name=&quot;incident&quot; &gt;
+        &lt;attribute name=&quot;incidentid&quot; /&gt;
+        &lt;filter&gt;
+            &lt;condition attribute=&quot;ticketnumber&quot; operator=&quot;eq&quot; value=&quot;#[payload.ticketnumber]&quot; /&gt;
+        &lt;/filter&gt;
+    &lt;/entity&gt;
+&lt;/fetch&gt;" doc:name="Query CRM For Case"/>
+        </enricher>
+
+        <choice doc:name="Check if case exists">
+            <when expression="#[flowVars.caseExists.hasNext() != &quot;true&quot;]">
+                <logger message="2. Start to create new case in crm: #[payload]" level="INFO" doc:name="2. Start to create new case in crm"/>
+                <enricher target="#[flowVars.fv_caseid]" doc:name="fv_caseid">
+                    <dynamicscrm:create config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" logicalName="incident" doc:name="Create new case in crm"/>
+                </enricher>
+                <set-payload value="#[sessionVars.sv_current_case_submission.reference_doc_url]" doc:name="Set Payload"/>
+                <foreach doc:name="For Each">
+                    <enricher target="#[flowVars.customerprovided]" doc:name="crmCustomer_provided_link">
+                        <flow-ref name="Customer_provided_linkSub_Flow" doc:name="Customer_provided_linkSub_Flow"/>
+                    </enricher>
+                </foreach>
+                <set-payload value="#[sessionVars.sv_current_case_submission.reference_numbers]" doc:name="Set Payload"/>
+                <foreach doc:name="For Each">
+                    <scripting:component doc:name="Groovy">
+                        <scripting:script engine="Groovy"><![CDATA[java.util.List listRefType = flowVars.refNoTypeVar;
+
+String refnumber = "279640002";
+
+for(int i=0; i<listRefType.size(); i++)
+{
+   System.out.println(">>>>>>>>");
+    String[] splitType = listRefType.get(i).toString().split("=");
+   System.out.println(">>>>splitType[0]>>>>"+splitType[0]);
+   System.out.println(">>>>payload.reference_number_type>>>>"+payload.reference_number_type);
+    if(splitType[0].toString().trim() == payload.reference_number_type.trim())
+    {
+       System.out.println(">ifffff>>>splitType[1]>>>>"+splitType[1]);
+		refnumber=splitType[1];
+        break;
+        System.out.println(">ifffff>>>splitType[1]>ppppppp>>>");
+    }
+    
+}
+payload.reference_number_type = refnumber;
+
+if(refnumber == "279640002")
+{
+     sessionVars.sv_note.add("type is not in the drop down and mapped the Other type to case");
+}
+return payload;
+
+
+]]></scripting:script>
+                    </scripting:component>
+                    <enricher target="#[flowVars.ref_type]" doc:name="Message Enricher">
+                        <flow-ref name="Ref_Number_TypeFlow" doc:name="Ref_Number_TypeFlow"/>
+                    </enricher>
+                </foreach>
+
+
+                
+
+                
+                
+            </when>
+            <otherwise>
+                <logger message="Case #[payload.ticketnumber] exists in CRM, skip" level="INFO" doc:name="Case exist in crm, skip"/>
+                <set-variable variableName="fv_caseid" value="#[flowVars.caseExists.next().incidentid]" doc:name="fv_caseid"/>
+
+
+            </otherwise>
+        </choice>
+        <set-payload value="#[sessionVars.sv_current_case_submission]" doc:name="Set payload back to default"/>
+
+        <enricher target="#[flowVars.rmaProcess]" doc:name="rmaProcess">
+            <flow-ref name="RMA-processFlow" doc:name="RMA-processFlow"/>
+        </enricher>
+        <enricher target="#[flowVars.crmNoteExists]" doc:name="crmNote">
+            <flow-ref name="crmNoteFlow" doc:name="crmNoteFlow"/>
+        </enricher>
+        <logger message="4. Write new case crm id back to the web" level="INFO" doc:name="4. Write new case crm id back to the web"/>
+        <set-payload value="{&quot;case_submission_id&quot;:&quot;#[sessionVars.sv_current_case_submission.case_submission_id]&quot;,&quot;crm_case_id&quot;:&quot;#[flowVars.fv_caseid]&quot;}" doc:name="Set Payload"/>
+        <http:request config-ref="HTTP_Request_Configuration" path="${api.path.updateSubmission}" method="POST" doc:name="HTTP Post">
+            <http:request-builder>
+                <http:header headerName="Content-Type" value="application/json"/>
+            </http:request-builder>
+        </http:request>
+
+
+    <logger message="5. Finished Syncing Case Submissions for #[sv_current_case_submission.first_name] #[sv_current_case_submission.last_name] To CRM at: #[server.dateTime]" level="INFO" doc:name="5. Finished!"/>
+    <exception-strategy ref="Catch_Exception_Handling1" doc:name="Reference Exception Strategy"/>
+
+  </flow>
+  <sub-flow name="Customer_provided_linkSub_Flow">
+                <dw:transform-message doc:name="Transform Message">
+                    <dw:input-payload mimeType="application/java"/>
+                    <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+	new_subject: payload.subject when payload.subject != null otherwise "",
+	new_url: payload.url when payload.url != null otherwise "",
+	new_incidentid_referenceto_incident:flowVars.fv_caseid when flowVars.fv_caseid != null otherwise ""
+}]]></dw:set-payload>
+                </dw:transform-message>
+                <dynamicscrm:create config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" logicalName="new_customerprovidedlink" doc:name="Microsoft Dynamics CRM"/>
+           
+    </sub-flow>
+    <sub-flow name="Ref_Number_TypeFlow">
+                <dw:transform-message doc:name="Transform Message">
+                    <dw:input-payload mimeType="application/java"/>
+                    <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{	
+	new_referencenumber: payload.reference_number,
+	new_referencenumbertype: payload.reference_number_type,
+	new_incidentid_referenceto_incident:flowVars.fv_caseid when flowVars.fv_caseid != null otherwise ""
+}]]></dw:set-payload>
+                </dw:transform-message>
+                <dynamicscrm:create config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" logicalName="new_externalreference" doc:name="Microsoft Dynamics CRM"/>
+           
+    </sub-flow>
+    <sub-flow name="RMA-processFlow">
+        <enricher target="#[flowVars.crmRMAId]" doc:name="crmRMAId">
+            <processor-chain doc:name="Processor Chain">
+                <choice doc:name="Check if rma id exists">
+                    <when expression="#[sessionVars.sv_current_case_submission.rma.rma_id != &quot;&quot;]">
+                        <enricher target="#[flowVars.rmaExists]" doc:name="rmaExists">
+                            <processor-chain doc:name="Processor Chain">
+                                <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot;&gt;&lt;entity name=&quot;amc_rma&quot;&gt;&lt;attribute name=&quot;amc_rmaid&quot; /&gt;&lt;filter&gt;&lt;condition attribute=&quot;new_webid&quot; operator=&quot;eq&quot; value=&quot;#[sessionVars.sv_current_case_submission.rma.rma_id]&quot; /&gt;&lt;/filter&gt;&lt;/entity&gt;&lt;/fetch&gt;" doc:name="Query RMA in CRM"/>
+                                <set-payload value="#[payload.hasNext() ? payload.next() : &quot;not matched&quot;]" doc:name="Set Payload"/>
+                            </processor-chain>
+                        </enricher>
+                        <choice doc:name="Check if RMA exists">
+                            <when expression="#[flowVars.rmaExists == &quot;not matched&quot;]">
+                                <dw:transform-message doc:name="Transform Message">
+                                    <dw:input-payload mimeType="application/java"/>
+                                    <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{	    
+		amc_name :"Partnerlink RMA Request",
+		amc_case_referenceto_incident : flowVars.fv_caseid when flowVars.fv_caseid != null otherwise "",
+		ownerid_referenceto_systemuser: flowVars.defaultUser.systemuserid when flowVars.defaultUser.systemuserid != null otherwise "",
+		new_ticketnumber: sessionVars.sv_current_case_submission.crm_case_id when sessionVars.sv_current_case_submission.crm_case_id != null otherwise "",
+		am_rmacontact_referenceto_contact :flowVars.fv_contactAccount.contactid when (flowVars.fv_contactAccount.contactid != null and flowVars.fv_contactAccount.contactid != "") otherwise "",
+		new_email: sessionVars.sv_current_case_submission.email when sessionVars.sv_current_case_submission.email != null otherwise "",	
+		new_emailcc : sessionVars.sv_current_case_submission.email_cc when sessionVars.sv_current_case_submission.email_cc != null otherwise "",	
+		am_billtoaccount_referenceto_account : flowVars.fv_contactAccount.accountid when (flowVars.fv_contactAccount.accountid != null and flowVars.fv_contactAccount.accountid != "") otherwise "",
+		new_billtoaccountnumber  :sessionVars.sv_current_case_submission.account_number when sessionVars.sv_current_case_submission.account_number != null otherwise "",
+		amc_street1 : sessionVars.sv_current_case_submission.rma.shipto_address.address_line_1 when sessionVars.sv_current_case_submission.rma.shipto_address.address_line_1 != null otherwise "",
+		amc_street2 : sessionVars.sv_current_case_submission.rma.shipto_address.address_line_2 when sessionVars.sv_current_case_submission.rma.shipto_address.address_line_2 != null otherwise "",
+		am_street3 : sessionVars.sv_current_case_submission.rma.shipto_address.address_line_3 when sessionVars.sv_current_case_submission.rma.shipto_address.address_line_3 != null otherwise "",
+		am_street4 : sessionVars.sv_current_case_submission.rma.shipto_address.address_line_4 when sessionVars.sv_current_case_submission.rma.shipto_address.address_line_4 != null otherwise "",
+		new_shiptoattention : sessionVars.sv_current_case_submission.rma.shipto_address.attention_name when sessionVars.sv_current_case_submission.rma.shipto_address.attention_name != null otherwise "",
+		new_shiptoemailaddress : sessionVars.sv_current_case_submission.rma.shipto_address.email when sessionVars.sv_current_case_submission.rma.shipto_address.email != null otherwise "",	
+		amc_city : sessionVars.sv_current_case_submission.rma.shipto_address.city when sessionVars.sv_current_case_submission.rma.shipto_address.city != null otherwise "",		
+		new_companyname : sessionVars.sv_current_case_submission.rma.shipto_address.company_name when sessionVars.sv_current_case_submission.rma.shipto_address.company_name != null otherwise "",
+		new_shiptolocationname : sessionVars.sv_current_case_submission.rma.shipto_address.location_name when sessionVars.sv_current_case_submission.rma.shipto_address.location_name != null otherwise "",
+		new_shiptophone : sessionVars.sv_current_case_submission.rma.shipto_address.phone_number when sessionVars.sv_current_case_submission.rma.shipto_address.phone_number != null otherwise "",
+		amc_state : sessionVars.sv_current_case_submission.rma.shipto_address.state when sessionVars.sv_current_case_submission.rma.shipto_address.state != null otherwise  "",
+		amc_zip : 	sessionVars.sv_current_case_submission.rma.shipto_address."zip" when sessionVars.sv_current_case_submission.rma.shipto_address."zip" != null otherwise  "",
+		new_shiptocountrytext : sessionVars.sv_current_case_submission.rma.shipto_address.country when sessionVars.sv_current_case_submission.rma.shipto_address.country != null otherwise "",
+		new_worksitestreetaddressline1 : sessionVars.sv_current_case_submission.rma.workto_address.address_line_1 when sessionVars.sv_current_case_submission.rma.workto_address.address_line_1 != null otherwise "",
+		new_worksitestreetaddressline2 : sessionVars.sv_current_case_submission.rma.workto_address.address_line_2 when sessionVars.sv_current_case_submission.rma.workto_address.address_line_2 != null otherwise "",
+		new_worksitestreetaddressline3 : sessionVars.sv_current_case_submission.rma.workto_address.address_line_3 when sessionVars.sv_current_case_submission.rma.workto_address.address_line_3 != null otherwise "",
+		new_worksitestreetaddressline4 : sessionVars.sv_current_case_submission.rma.workto_address.address_line_4 when sessionVars.sv_current_case_submission.rma.workto_address.address_line_4 != null otherwise "",
+		new_worksiteattention : sessionVars.sv_current_case_submission.rma.workto_address.attention_name when sessionVars.sv_current_case_submission.rma.workto_address.attention_name != null otherwise "",
+		new_worksitecity : sessionVars.sv_current_case_submission.rma.workto_address.city when sessionVars.sv_current_case_submission.rma.workto_address.city != null otherwise "",
+		new_worksitecountrytext : sessionVars.sv_current_case_submission.rma.workto_address.country when sessionVars.sv_current_case_submission.rma.workto_address.country != null otherwise "",
+		new_worksiteemailaddress : sessionVars.sv_current_case_submission.rma.workto_address.email when sessionVars.sv_current_case_submission.rma.workto_address.email != null otherwise "",
+		new_worksitelocationname : sessionVars.sv_current_case_submission.rma.workto_address.location_name when sessionVars.sv_current_case_submission.rma.workto_address.location_name != null otherwise "",
+		new_worksitephone : sessionVars.sv_current_case_submission.rma.workto_address.phone_number when sessionVars.sv_current_case_submission.rma.workto_address.phone_number != null otherwise "",
+		new_worksitestateprovince : sessionVars.sv_current_case_submission.rma.workto_address.state when sessionVars.sv_current_case_submission.rma.workto_address.state != null otherwise "",
+		new_worksitezippostalcode : sessionVars.sv_current_case_submission.rma.workto_address."zip" when sessionVars.sv_current_case_submission.rma.workto_address."zip" != null otherwise "",
+		new_serialnumberid: sessionVars.sv_system_serial_info.amc_serialnumberid when sessionVars.sv_system_serial_info.amc_serialnumberid != null otherwise "",
+		new_webid : sessionVars.sv_current_case_submission.rma.rma_id when sessionVars.sv_current_case_submission.rma.rma_id != null otherwise ""
+}]]></dw:set-payload>
+                                </dw:transform-message>
+                                <dynamicscrm:create config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" logicalName="amc_rma" doc:name="Create RMA in CRM"/>
+                            </when>
+                            <otherwise>
+                                <logger message="RMA exists in crm,skip" level="INFO" doc:name="RMA exists in crm,skip"/>
+                                <expression-component doc:name="Return rmaid"><![CDATA[return payload=flowVars.rmaExists.amc_rmaid;]]></expression-component>
+                            </otherwise>
+                        </choice>
+                    </when>
+                    <otherwise>
+                        <logger message="No rma_id exists to create CRM RMA Entity" level="INFO" doc:name="No rma_id exists"/>
+                        <expression-component doc:name="Set No rma_id Var"><![CDATA[sessionVars.sv_note.add("No rma_id existed for creating the new RMA entity"); // added note]]></expression-component>
+                    </otherwise>
+                </choice>
+
+            </processor-chain>
+        </enricher>
+        <enricher doc:name="crmRMAItemId" target="#[flowVars.crmRMAItemId]">
+            <processor-chain doc:name="Processor Chain">
+            <choice doc:name="Validate Request items is not empty">
+			      <when expression="#[sessionVars.sv_current_case_submission.rma.rma_item.size()!=0 &amp;&amp; sessionVars.sv_current_case_submission.rma.rma_id != &quot;&quot;]">
+			                <set-payload value="#[sessionVars.sv_current_case_submission.rma.rma_item]" doc:name="RMAItemPayload"/>
+			        <foreach doc:name="For Each">
+			
+			                    <enricher target="#[flowVars.rmaitemExists]" doc:name="rmaitemExists">
+                                <processor-chain doc:name="Processor Chain">
+                                    <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot;&gt;&lt;entity name=&quot;new_rmarequesteditem&quot;&gt;&lt;attribute name=&quot;new_rmarequesteditemid&quot; /&gt;&lt;filter&gt;&lt;condition attribute=&quot;new_webid&quot; operator=&quot;eq&quot; value=&quot;#[payload.rma_item_id]&quot; /&gt;&lt;/filter&gt;&lt;/entity&gt;&lt;/fetch&gt;" doc:name="Query RMA Item in CRM"/>
+                                    <set-payload value="#[payload.hasNext() ? payload.next() : &quot;not matched&quot;]" doc:name="Set Payload"/>
+                                </processor-chain>
+
+			                    </enricher>
+			                    <choice doc:name="Check if RMA Items exists">
+			                        <when expression="#[flowVars.rmaitemExists == &quot;not matched&quot;]">
+			                            <dw:transform-message doc:name="Transform Message" metadata:id="2d748eed-9c5f-433d-b76f-40956b4925f3">
+			                                <dw:input-payload mimeType="application/java"/>
+			                                <dw:set-payload>
+          <![CDATA[%dw 1.0
+			%output application/java
+			---
+			{
+				ownerid_referenceto_systemuser: flowVars.defaultUser.systemuserid when flowVars.defaultUser.systemuserid != null otherwise "",
+				new_partnumber: "0" when (payload.part_number == null or payload.part_number == "")  otherwise payload.part_number,
+				new_rma_referenceto_amc_rma: flowVars.crmRMAId,
+				new_description: payload.part_desc when payload.part_desc != null otherwise "",
+				new_requestedquantity: 0 when (payload.quantity == null or payload.quantity == "") otherwise payload.quantity as :number,
+				new_webid: payload.rma_item_id when payload.rma_item_id != null otherwise "",
+        new_comments: payload.comments
+			}]]></dw:set-payload>
+			                            </dw:transform-message>
+			                            <dynamicscrm:create config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" logicalName="new_rmarequesteditem" doc:name="Create RMA Item in CRM"/>
+			                        </when>
+			                        <otherwise>
+							<logger message="RMA Item Exists in CRM" level="INFO" doc:name="RMA Item Exists in CRM"/>
+			                        </otherwise>
+			                    </choice>
+
+
+          <!-- <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="dsql:" doc:name="CRM - CASE - Create"/> -->
+        </foreach>
+
+      </when>
+      <otherwise>
+        <logger message="No record existed for creating the new RMA Item" level="INFO" doc:name="No RMA Items"/>
+        <expression-component doc:name="Set NoRecord Var"><![CDATA[sessionVars.sv_note.add("No record existed for creating the new RMA Item"); // added note
+//sessionVars.message="No record existed for creating the new RMA Item";]]></expression-component>
+      </otherwise>
+    </choice>
+            </processor-chain>
+        </enricher>
+     
+
+	     
+        
+    </sub-flow>
+    <sub-flow name="crmNoteFlow">
+    <set-session-variable variableName="sv_note" value="#[sessionVars.sv_note.toString().replaceAll(&quot;\\[|\\]&quot;, &quot;&quot;)]" doc:name="sv_note"/>
+                <choice doc:name="Check if source is web or api">
+                    <when expression="#[payload.source == 'Equus' || payload.source == 'Servers Direct']">
+                        <dw:transform-message doc:name="Transform CRM Annotation">
+                            <dw:input-payload mimeType="application/java"/>
+                            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+
+{
+	objecttypecode : 112,
+	isdocument: false,
+	ownerid_referenceto_systemuser: flowVars.defaultUser.systemuserid,
+	objectid_referenceto_incident: flowVars.fv_caseid,
+	subject: payload.source ++ ' - Web Form Submission',
+	
+	notetext: sessionVars.sv_note
+    ++ '\n Created Date: ' ++ payload.created_date
+    ++ '\n Account Name: ' ++ payload.account_name
+    ++ '\n Is Login: ' ++ ('Yes' when payload.is_login == true otherwise 'No')
+    ++ '\n Admin User: ' ++ (payload.admin_user when payload.admin_user != null otherwise '')
+    ++ '\n Account Number: ' ++ (payload.account_number when payload.account_number != null otherwise '')
+    ++ '\n Email: ' ++ payload.email
+    ++ '\n First Name: ' ++ payload.first_name
+    ++ '\n Last Name: ' ++ payload.last_name
+    ++ '\n Part Number: ' ++ (payload.part_number when payload.part_number != null otherwise '')
+    ++ '\n Phone: ' ++ payload.phone
+    ++ '\n Problem Description: ' ++ payload.problem_description
+    ++ '\n Reported Reason: ' ++ payload.reported_reason
+    ++ '\n Serial Number: ' ++ (payload.serial_number when payload.serial_number != null otherwise '')
+    ++ '\n Source: ' ++ payload.source
+    ++ '\n Updated Date: ' ++ payload.updated_date 
+	
+	
+    
+}]]></dw:set-payload>
+                        </dw:transform-message>
+                    </when>
+                    <otherwise>
+                        <dw:transform-message doc:name="Transform CRM Annotation">
+                        <dw:input-payload mimeType="application/java"/>
+                            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+
+
+{
+	objecttypecode : 112,
+	isdocument: false,
+	ownerid_referenceto_systemuser: flowVars.defaultUser.systemuserid,
+	objectid_referenceto_incident: flowVars.fv_caseid,
+	subject: 'SSS Update' when payload.source == 'Source Support' otherwise
+		   'Google Update' when payload.source == 'Google' otherwise
+		   payload.source ++ ' - Api Case Submission',
+	
+	notetext: sessionVars.sv_note
+    ++ '\n Created Date: ' ++ (payload.created_date when payload.created_date != null otherwise '')
+    ++ '\n Account Number: ' ++ (payload.account_number when payload.account_number != null otherwise '')
+    ++ '\n Email: ' ++ (payload.email when payload.email != null otherwise '')
+    ++ '\n First Name: ' ++ (payload.first_name when payload.first_name != null otherwise '')
+    ++ '\n Last Name: ' ++ (payload.last_name when payload.last_name != null otherwise '')
+    ++ '\n Phone: ' ++ (payload.phone when payload.phone != null otherwise '')
+    ++ '\n Problem Description: ' ++ (payload.problem_description  when payload.problem_description != null otherwise '')
+    ++ '\n Serial Number: ' ++ (payload.serial_number when payload.serial_number != null otherwise '')
+    ++ '\n Source: ' ++ (payload.source when payload.source != null otherwise '')
+    ++ '\n Reference Number: ' ++ (payload.reference_number when payload.reference_number != null otherwise '')
+	++ '\n Crm Case Number: ' ++ (payload.crm_case_number when payload.crm_case_number != null otherwise '')
+	++ '\n Created By: ' ++ (payload.created_by when payload.created_by != null otherwise '')
+	
+    
+}]]></dw:set-payload>
+                        </dw:transform-message>
+                    </otherwise>
+                </choice>
+      <enricher target="#[variable:fv_casenote]" doc:name="fv_casenote">
+        <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot; &gt;
+    &lt;entity name=&quot;annotation&quot; &gt;
+        &lt;filter type=&quot;and&quot; &gt;
+            &lt;condition attribute=&quot;objecttypecode&quot; operator=&quot;eq&quot; value=&quot;112&quot; /&gt;
+            &lt;condition attribute=&quot;objectid&quot; operator=&quot;eq&quot; value=&quot;#[flowVars.fv_caseid]&quot; /&gt;
+            &lt;condition attribute=&quot;subject&quot; operator=&quot;eq&quot; value=&quot;#[payload.subject]&quot; /&gt;
+        &lt;/filter&gt;
+    &lt;/entity&gt;
+&lt;/fetch&gt;" doc:name="Microsoft Dynamics CRM"/>
+      </enricher>
+      <choice doc:name="Check if note exists in CRM">
+        <when expression="#[fv_casenote.hasNext() == false]">
+          <logger message="3. Now create note attach to newly create case: #[sessionVars.sv_current_case_submission.crm_case_number]" level="INFO" doc:name="3. Now create note attach to newly create case"/>
+          <dynamicscrm:create config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" logicalName="annotation" doc:name="Create new note in crm case"/>
+        </when>
+        <otherwise>
+          <logger level="INFO" doc:name="3. Note exist, skip" message="3. Note exist, skip"/>
+        </otherwise>
+      </choice>
+    
+    </sub-flow>
+
+
+
+
+</mule>

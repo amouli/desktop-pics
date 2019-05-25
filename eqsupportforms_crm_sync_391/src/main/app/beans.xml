@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:dynamicscrm="http://www.mulesoft.org/schema/mule/dynamicscrm" xmlns:http="http://www.mulesoft.org/schema/mule/http" 
+	xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/dynamicscrm http://www.mulesoft.org/schema/mule/dynamicscrm/current/mule-dynamicscrm.xsd
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-current.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+<!--
+  Default, development properties. Use the config-override.properties below
+  to set environmentally specific properties.
+  -->
+  <context:property-placeholder location="classpath:config.properties" order="2"/>
+  <!--
+    This file should exist on the server's classpath (e.g.: MULE_HOME/conf).
+    You can add it in src/main/resources if you wish to override something in
+    your local environment but do not check it into the project.
+   -->
+  <context:property-placeholder location="classpath:config-override.properties"
+         order="1" ignore-unresolvable="true" ignore-resource-not-found="true"/>
+
+<http:request-config name="HTTP_Request_Configuration" host="${api.host}" port="80" doc:name="HTTP Request Configuration" usePersistentConnections="false"/>
+
+<jms:activemq-connector name="Active_MQ" specification="1.1" brokerURL="${brokerUrl}" validateConnections="true" doc:name="Active MQ" persistentDelivery="true" numberOfConsumers="1" cacheJmsSessions="false" maxRedelivery="50"/>
+    <dynamicscrm:ntlm-direct-connection-config name="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" username="${crm.account}" password="${crm.pwd}" organizationServiceUrl="${crm.host}" domain="EQUUS" doc:name="Microsoft Dynamics CRM: NTLM Direct Connection"/>
+</mule>

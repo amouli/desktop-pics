@@ -1,0 +1,578 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting"
+	xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:smtp="http://www.mulesoft.org/schema/mule/smtp" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:dynamicscrm="http://www.mulesoft.org/schema/mule/dynamicscrm" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/dynamicscrm http://www.mulesoft.org/schema/mule/dynamicscrm/current/mule-dynamicscrm.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/smtp http://www.mulesoft.org/schema/mule/smtp/current/mule-smtp.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+    
+    <flow name="lookup-customer">
+        <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch&gt;   &lt;entity name=&quot;account&quot;&gt;        &lt;attribute name=&quot;accountid&quot; /&gt;     &lt;order attribute=&quot;name&quot; descending=&quot;false&quot; /&gt;     &lt;filter type=&quot;and&quot;&gt;       &lt;condition attribute=&quot;accountnumber&quot; operator=&quot;eq&quot; value=&quot;#[payload.new_jdenumber]&quot; /&gt;    &lt;condition attribute=&quot;statecode&quot; operator=&quot;eq&quot; value=&quot;0&quot; /&gt;  &lt;/filter&gt;   &lt;/entity&gt; &lt;/fetch&gt;" doc:name="Microsoft Dynamics CRM"/>
+        <set-payload value="#[payload.hasNext() ? payload.next(): &quot;not matched&quot;]" doc:name="Set CRM Response as Payload"/>
+    </flow>
+    <sub-flow name="lookup-defaultDomainUser">
+
+        <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot;&gt;&lt;entity name=&quot;systemuser&quot;&gt;&lt;attribute name=&quot;systemuserid&quot; /&gt;&lt;filter&gt;&lt;condition attribute=&quot;domainname&quot; operator=&quot;eq&quot; value=&quot;${default.DomainName}&quot;  /&gt;&lt;/filter&gt;&lt;/entity&gt;&lt;/fetch&gt;" doc:name="Fetch CRM System User Id"/>
+        <set-payload value="#[payload.hasNext() ? payload.next(): &quot;not matched&quot;]" doc:name="Set Default Domain User Id"/>
+
+    </sub-flow>
+    <flow name="lookup-line-temp">
+        <dw:transform-message doc:name="Transform Message">
+        	<dw:input-payload mimeType="application/java"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	line_type: 100000000 when payload.line_type == "W" otherwise
+	           100000001 when payload.line_type == "S" otherwise ""
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <!-- <choice doc:name="Choice">
+            <when expression="#[payload.line_type == &quot;W&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;line_type&quot;:100000000}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.line_type == &quot;S&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;line_type&quot;:100000001}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <otherwise>
+                <logger level="INFO" doc:name="Logger"/>
+            </otherwise>
+        </choice> -->
+    </flow>
+    <flow name="lookup-orderproduct-cat">
+        <dw:transform-message doc:name="Transform Message">
+        	<dw:input-payload mimeType="application/java"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	ordercat: 279640000 when payload.ordercat == "NB" otherwise
+	          279640001 when payload.ordercat == "DT" otherwise
+	          279640002 when payload.ordercat == "SR" otherwise
+	          279640003 when payload.ordercat == "ST" otherwise
+	          279640004 when payload.ordercat == "CB" otherwise
+	          279640005 when payload.ordercat == "MR" otherwise
+	          279640006 when payload.ordercat == "NO" otherwise 279640000  
+	          
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <!-- <choice doc:name="Choice">
+            <when expression="#[payload.ordercat == &quot;NB&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;ordercat&quot;:279640000}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.ordercat == &quot;DT&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;ordercat&quot;:279640001}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.ordercat == &quot;SR&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;ordercat&quot;:279640002}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.ordercat == &quot;ST&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;ordercat&quot;:279640003}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.ordercat == &quot;CB&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;ordercat&quot;:279640004}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.ordercat == &quot;MR&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;ordercat&quot;:279640005}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.ordercat == &quot;NO&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;ordercat&quot;:279640006}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <otherwise>
+                <set-payload value="{&quot;ordercat&quot;:279640000}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+                <logger level="INFO" doc:name="Logger" message="check ordercat #[payload.jdenumber]"/>
+            </otherwise>
+        </choice> -->
+    </flow>
+    <flow name="lookup-original-sales-branch">
+        <dw:transform-message doc:name="Transform Message">
+        	<dw:input-payload mimeType="application/java"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	salesbranch: 279640000 when payload.salesbranch == "101M" otherwise
+	             279640001 when payload.salesbranch == "103M" otherwise
+	             279640002 when payload.salesbranch == "114M" otherwise
+	             279640003 when payload.salesbranch == "125M" otherwise
+	             279640004 when payload.salesbranch == "132M" otherwise
+	             279640005 when payload.salesbranch == "304M" otherwise
+	             279640006 when payload.salesbranch == "305M" otherwise
+	             279640007 when payload.salesbranch == "122M" otherwise
+	             279640008 when payload.salesbranch == "104M" otherwise
+	             279640009 when payload.salesbranch == "107M" otherwise
+	             279640010 when payload.salesbranch == "108M" otherwise
+	             279640011 when payload.salesbranch == "110M" otherwise
+	             279640012 when payload.salesbranch == "112M" otherwise
+	             279640013 when payload.salesbranch == "117M" otherwise
+	             279640014 when payload.salesbranch == "131M" otherwise
+	             279640015 when payload.salesbranch == "105C" otherwise
+	             279640016 when payload.salesbranch == "106L" otherwise
+	             279640017 when payload.salesbranch == "106M" otherwise
+	             279640018 when payload.salesbranch == "109M" otherwise
+	             279640019 when payload.salesbranch == "111M" otherwise
+	             279640020 when payload.salesbranch == "113M" otherwise
+	             279640021 when payload.salesbranch == "115M" otherwise
+	             279640022 when payload.salesbranch == "116M" otherwise
+	             279640023 when payload.salesbranch == "118M" otherwise
+	             279640024 when payload.salesbranch == "119M" otherwise
+	             279640025 when payload.salesbranch == "120M" otherwise
+	             279640026 when payload.salesbranch == "123C" otherwise
+	             279640027 when payload.salesbranch == "123M" otherwise
+	             279640028 when payload.salesbranch == "124M" otherwise
+	             279640029 when payload.salesbranch == "133M" otherwise
+	             279640030 when payload.salesbranch == "135M" otherwise
+	             279640031 when payload.salesbranch == "188M" otherwise
+	             279640032 when payload.salesbranch == "204I" otherwise
+	             279640033 when payload.salesbranch == "310M" otherwise
+	             279640034 when payload.salesbranch == "312M" otherwise
+	             279640035 when payload.salesbranch == "CON1" otherwise
+	             279640036 when payload.salesbranch == "CON2" otherwise
+	             279640037 when payload.salesbranch == "PUR1" otherwise
+	             279640038 when payload.salesbranch == "PUR2" otherwise
+	             279640039 when payload.salesbranch == "PUR5" otherwise
+	             279640040 when payload.salesbranch == "105M" otherwise 279640006
+	             
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <!-- <choice doc:name="Choice">
+            <when expression="#[payload.salesbranch == &quot;101M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640000}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.salesbranch == &quot;103M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640001}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.salesbranch == &quot;114M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640002}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.salesbranch == &quot;125M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640003}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.salesbranch == &quot;132M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640004}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+               <when expression="#[payload.salesbranch == &quot;304M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640005}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.salesbranch == &quot;305M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640006}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;122M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640007}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;104M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640008}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;107M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640009}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;108M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640010}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;110M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640011}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;112M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640012}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;117M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640013}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;131M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640014}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;105C&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640015}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;106L&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640016}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;106M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640017}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;109M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640018}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;111M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640019}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;113M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640020}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.salesbranch == &quot;115M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640021}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.salesbranch == &quot;116M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640022}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.salesbranch == &quot;118M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640023}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.salesbranch == &quot;119M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640024}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.salesbranch == &quot;120M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640025}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;123C&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640026}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.salesbranch == &quot;123M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640027}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.salesbranch == &quot;124M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640028}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;133M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640029}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;135M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640030}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;188M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640031}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;204I&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640032}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;310M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640033}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;312M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640034}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;CON1&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640035}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;CON2&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640036}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;PUR1&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640037}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;PUR2&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640038}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;PUR5&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640039}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.salesbranch == &quot;105M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;salesbranch&quot;:279640040}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <otherwise>
+                <logger level="INFO" doc:name="Logger" message="check sales branch"/>
+                <set-payload value="{&quot;salesbranch&quot;:279640006}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </otherwise>
+        </choice> -->
+    </flow>
+     <flow name="lookup-build-branch">
+        <dw:transform-message doc:name="Transform Message">
+        	<dw:input-payload mimeType="application/java"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	buildbranch: 100000000 when payload.buildbranch == "101M" otherwise
+				 100000001 when payload.buildbranch == "103M" otherwise
+				 100000002 when payload.buildbranch == "104M" otherwise
+				 100000003 when payload.buildbranch == "105M" otherwise
+				 100000004 when payload.buildbranch == "106M" otherwise
+				 100000005 when payload.buildbranch == "107M" otherwise
+				 100000007 when payload.buildbranch == "109M" otherwise
+				 100000008 when payload.buildbranch == "110M" otherwise
+				 100000009 when payload.buildbranch == "111M" otherwise
+				 100000010 when payload.buildbranch == "112M" otherwise
+				 100000011 when payload.buildbranch == "113M" otherwise
+				 100000012 when payload.buildbranch == "114M" otherwise
+				 100000013 when payload.buildbranch == "115M" otherwise
+				 100000014 when payload.buildbranch == "116M" otherwise
+				 100000015 when payload.buildbranch == "117M" otherwise
+				 100000016 when payload.buildbranch == "118M" otherwise
+				 100000017 when payload.buildbranch == "119M" otherwise
+				 100000018 when payload.buildbranch == "120M" otherwise
+				 100000019 when payload.buildbranch == "122M" otherwise
+				 100000020 when payload.buildbranch == "123M" otherwise
+				 100000021 when payload.buildbranch == "124M" otherwise
+				 100000022 when payload.buildbranch == "125M" otherwise
+				 100000023 when payload.buildbranch == "131M" otherwise
+				 100000024 when payload.buildbranch == "132M" otherwise
+				 100000025 when payload.buildbranch == "133M" otherwise
+				 100000026 when payload.buildbranch == "135M" otherwise
+				 100000027 when payload.buildbranch == "188M" otherwise
+				 100000028 when payload.buildbranch == "201M" otherwise
+				 100000029 when payload.buildbranch == "203M" otherwise
+				 100000030 when payload.buildbranch == "204M" otherwise
+				 100000031 when payload.buildbranch == "210M" otherwise
+				 100000032 when payload.buildbranch == "212M" otherwise
+				 100000033 when payload.buildbranch == "301M" otherwise
+				 100000034 when payload.buildbranch == "303M" otherwise
+				 100000035 when payload.buildbranch == "304M" otherwise
+				 100000036 when payload.buildbranch == "305M" otherwise
+				 100000037 when payload.buildbranch == "306M" otherwise
+				 100000038 when payload.buildbranch == "310M" otherwise
+				 100000039 when payload.buildbranch == "312M" otherwise ""
+}
+
+]]></dw:set-payload>
+        </dw:transform-message>
+       <!--  <choice doc:name="Choice">
+            <when expression="#[payload.buildbranch == &quot;101M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000000}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.buildbranch == &quot;103M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000001}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.buildbranch == &quot;104M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000002}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.buildbranch == &quot;105M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000003}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.buildbranch == &quot;106M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000004}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.buildbranch == &quot;107M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000005}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.buildbranch == &quot;109M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000007}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;110M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000008}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;111M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000009}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;112M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000010}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;113M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000011}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;114M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000012}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;115M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000013}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;116M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000014}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;117M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000015}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;118M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000016}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;119M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000017}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;120M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000018}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;122M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000019}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;123M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000020}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;124M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000021}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.buildbranch == &quot;125M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000022}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;131M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000023}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;132M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000024}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;133M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000025}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;135M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000026}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;188M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000027}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;201M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000028}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;203M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000029}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;204M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000030}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;210M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000031}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;212M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000032}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;301M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000033}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;303M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000034}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;304M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000035}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;305M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000036}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;306M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000037}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;310M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000038}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.buildbranch == &quot;312M&quot;]">
+                <set-payload doc:name="Set Payload" value="{&quot;buildbranch&quot;:100000039}"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <otherwise>
+	
+                <logger level="INFO" doc:name="Logger"/>
+            </otherwise>
+        </choice> -->
+    </flow>
+    <flow name="lookup-ordertype-temp">
+        <dw:transform-message doc:name="Transform Message">
+        	<dw:input-payload mimeType="application/java"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	order_type: 100000000 when payload.order_type == "SO" otherwise 
+	            100000001 when payload.order_type == "SP" otherwise
+	            100000002 when payload.order_type == "SH" otherwise
+	            100000003 when payload.order_type == "SF" otherwise 100000000
+	            
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <!-- <choice doc:name="Choice">
+            <when expression="#[payload.order_type == &quot;SO&quot;]">
+                <set-payload value="{&quot;order_type&quot;:100000000}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.order_type == &quot;SP&quot;]">
+                <set-payload value="{&quot;order_type&quot;:100000001}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.order_type == &quot;SH&quot;]">
+                <set-payload value="{&quot;order_type&quot;:100000002}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.order_type == &quot;SF&quot;]">
+                <set-payload value="{&quot;order_type&quot;:100000003}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <otherwise>
+                <set-payload value="{&quot;order_type&quot;:100000000}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+                <logger level="INFO" doc:name="Logger" message="check order type !"/>
+            </otherwise>
+        </choice> -->
+    </flow>
+</mule>

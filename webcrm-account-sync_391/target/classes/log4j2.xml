@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Configuration>
+    <Appenders>
+        <RollingFile name="file" fileName="${sys:mule.home}${sys:file.separator}logs${sys:file.separator}webcrm-account-sync.log" 
+                 filePattern="${sys:mule.home}${sys:file.separator}logs${sys:file.separator}webcrm-account-sync-%i.log">
+            <PatternLayout pattern="%d [%t] %-5p %c - %m%n" />
+            <SizeBasedTriggeringPolicy size="10 MB" />
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+
+      <!-- Store log for each flow separately -->
+      <RollingFile name="jde-address-to-queue-flow" fileName="${sys:mule.home}${sys:file.separator}logs${sys:file.separator}jde-address-to-queue.log"
+                 filePattern="${sys:mule.home}${sys:file.separator}logs${sys:file.separator}jde-address-to-queue-%i.log">
+        <PatternLayout pattern="%d [%t] %-5p %c - %m%n" />
+        <SizeBasedTriggeringPolicy size="10 MB" />
+        <DefaultRolloverStrategy max="10"/>
+      </RollingFile>
+      <RollingFile name="jde-address-from-queue-to-crm-flow" fileName="${sys:mule.home}${sys:file.separator}logs${sys:file.separator}jde-address-from-queue-to-crm.log"
+               filePattern="${sys:mule.home}${sys:file.separator}logs${sys:file.separator}jde-address-from-queue-to-crm-%i.log">
+        <PatternLayout pattern="%d [%t] %-5p %c - %m%n" />
+        <SizeBasedTriggeringPolicy size="10 MB" />
+        <DefaultRolloverStrategy max="10"/>
+      </RollingFile>
+
+      <RollingFile name="jde-account-to-queue-flow" fileName="${sys:mule.home}${sys:file.separator}logs${sys:file.separator}jde-account-to-queue.log"
+               filePattern="${sys:mule.home}${sys:file.separator}logs${sys:file.separator}jde-account-to-queue-%i.log">
+        <PatternLayout pattern="%d [%t] %-5p %c - %m%n" />
+        <SizeBasedTriggeringPolicy size="10 MB" />
+        <DefaultRolloverStrategy max="10"/>
+      </RollingFile>
+      <RollingFile name="jde-account-from-queue-to-crm-flow" fileName="${sys:mule.home}${sys:file.separator}logs${sys:file.separator}jde-account-from-queue-to-crm.log"
+       filePattern="${sys:mule.home}${sys:file.separator}logs${sys:file.separator}jde-account-from-queue-to-crm-%i.log">
+        <PatternLayout pattern="%d [%t] %-5p %c - %m%n" />
+        <SizeBasedTriggeringPolicy size="10 MB" />
+        <DefaultRolloverStrategy max="10"/>
+      </RollingFile>
+      
+    </Appenders>
+    <Loggers>
+        <!-- CXF is used heavily by Mule for web services -->
+        <AsyncLogger name="org.apache.cxf" level="WARN"/>
+
+        <!-- Apache Commons tend to make a lot of noise which can clutter the log-->
+        <AsyncLogger name="org.apache" level="WARN"/>
+
+        <!-- Reduce startup noise -->
+        <AsyncLogger name="org.springframework.beans.factory" level="WARN"/>
+
+        <!-- Mule classes -->
+        <AsyncLogger name="org.mule" level="INFO"/>
+        <AsyncLogger name="com.mulesoft" level="INFO"/>
+
+        <!-- Reduce DM verbosity -->
+        <AsyncLogger name="org.jetel" level="WARN"/>
+        <AsyncLogger name="Tracking" level="WARN"/>
+        
+        <AsyncRoot level="INFO">
+            <AppenderRef ref="file" />
+        </AsyncRoot>
+      
+       <!-- Store log for each flow separately -->
+       <Logger name="jde-address-to-queue.jde-address-to-queue-flow" level="INFO">
+                <AppenderRef ref="jde-address-to-queue-flow" level="INFO" />
+       </Logger>
+       <Logger name="jde-address-from-queue-to-crm.jde-address-from-queue-to-crm-flow" level="INFO">
+                <AppenderRef ref="jde-address-from-queue-to-crm-flow" level="INFO" />
+       </Logger>            
+       
+       <Logger name="jde-account-to-queue.jde-account-to-queue-flow" level="INFO">
+                <AppenderRef ref="jde-account-to-queue-flow" level="INFO" />
+       </Logger>
+       <Logger name="jde-account-from-queue-to-crm.jde-account-from-queue-to-crm-flow" level="INFO">
+                <AppenderRef ref="jde-account-from-queue-to-crm-flow" level="INFO" />
+       </Logger> 
+      
+    </Loggers>
+</Configuration>

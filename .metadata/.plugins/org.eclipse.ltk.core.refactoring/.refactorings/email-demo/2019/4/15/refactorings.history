@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;email-demo/src/main/resources/body.html&apos; to &apos;body.txt&apos;" description="Rename resource &apos;body.html&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="src/main/resources/body.html" name="body.txt" stamp="1554616341187" updateReferences="true"/>
+</session>

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:core="http://www.mulesoft.org/schema/mule/core" xmlns:mock="http://www.mulesoft.org/schema/mule/mock" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/mock http://www.mulesoft.org/schema/mule/mock/current/mule-mock.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd">
+    <munit:config mock-connectors="false" mock-inbounds="false" name="munit" doc:name="MUnit configuration"/>
+    <spring:beans>
+        <spring:import resource="classpath:global.xml"/>
+        <spring:import resource="classpath:lookup.xml"/>
+        <spring:import resource="classpath:rma-info-queue-to-crm.xml"/>
+    </spring:beans>
+    <munit:test name="rma-info-queue-to-crm-test-suite-success" description="Test">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock-TransactionLog Entry-JMS">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['TransactionLogEntry']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#['1']"/>
+        </mock:when>
+        <mock:when messageProcessor=".*:.*" doc:name="Mock-RMA Queue-subFlow">
+            <mock:with-attributes>
+                <mock:with-attribute name="name" whereValue="#[matchContains('rma-info-queue-to-crmSub_Flow')]"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#['1']"/>
+        </mock:when>
+        <mock:when messageProcessor=".*:.*" doc:name="Mock-TransactionLogUpdate-JMS">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['TransactionLogUpdate']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#['1']"/>
+        </mock:when>
+        <set-payload value="#[getResource('testdata_rmatocrm/success-requestitems.json').asString()]" doc:name="Set Payload"/>
+        <json:json-to-object-transformer returnClass="java.util.HashMap" doc:name="JSON to Object"/>
+        <flow-ref name="rma-info-queue-to-crmFlow" doc:name="Flow-ref to rma-info-queue-to-crmFlow"/>
+        <munit:assert-true message="The response is not correct !!!" condition="#[message.payloadAs(java.lang.String).contains('&quot;code&quot;:&quot;104&quot;')]" doc:name="Assert True"/>
+    </munit:test>
+    <munit:test name="rma-info-queue-to-crm-test-suite-Badrequest" description="Test">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock-TrasactionLog Entry-JMS">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['TransactionLogEntry']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#['1']"/>
+        </mock:when>
+        <mock:when messageProcessor=".*:.*" doc:name="Mock-ErrorMessageLog-JMS">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['ErrorMessageLogEntry']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#['1']"/>
+        </mock:when>
+        <mock:when messageProcessor=".*:.*" doc:name="Mock-TransactionLogUpdate Failed-JMS">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['TransactionLogUpdate']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#['1']"/>
+        </mock:when>
+        <mock:when messageProcessor=".*:.*" doc:name="Mock-Notification Service">
+            <mock:with-attributes>
+                <mock:with-attribute name="name" whereValue="#[matchContains('NotificationService-Support')]"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#['1']"/>
+        </mock:when>
+        <set-payload value="#[getResource('testdata_rmatocrm/badRequest.json').asString()]" doc:name="Set Payload"/>
+        <flow-ref name="rma-info-queue-to-crmFlow" doc:name="Flow-ref to rma-info-queue-to-crmFlow"/>
+        <munit:assert-true message="The response is not correct !!!" condition="#[message.payloadAs(java.lang.String).contains('&quot;code&quot;:&quot;101&quot;')]" doc:name="Assert True"/>
+    </munit:test>
+    <munit:test name="rma-info-queue-to-crm-test-suite-crm-unavaliable" description="Test">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock-TransactionLog Entry-JMS">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['TransactionLogEntry']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#['1']"/>
+        </mock:when>
+        <mock:when messageProcessor=".*:.*" doc:name="Mock-ErrorMessage Log-JMS">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['ErrorMessageLogEntry']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#['1']"/>
+        </mock:when>
+        <mock:when messageProcessor=".*:.*" doc:name="Mock-TransactionLog Update Failed-JMS">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['TransactionLogUpdate']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#['1']"/>
+        </mock:when>
+        <mock:when messageProcessor=".*:.*" doc:name="Mock-Notification Service">
+            <mock:with-attributes>
+                <mock:with-attribute name="name" whereValue="#[matchContains('NotificationService-Support')]"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#['1']"/>
+        </mock:when>
+        <set-payload value="#[getResource('testdata_rmatocrm/success-requestitems.json').asString()]" doc:name="Set Payload"/>
+        <flow-ref name="rma-info-queue-to-crmFlow" doc:name="Flow-ref to rma-info-queue-to-crmFlow"/>
+        <munit:assert-true message="The response is not correct !!!" condition="#[message.payloadAs(java.lang.String).contains('&quot;code&quot;:&quot;103&quot;')]" doc:name="Assert True"/>
+    </munit:test>
+</mule>

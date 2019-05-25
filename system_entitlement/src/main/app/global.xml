@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:smtp="http://www.mulesoft.org/schema/mule/smtp" xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc" xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-current.xsd
+http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd
+http://www.mulesoft.org/schema/mule/smtp http://www.mulesoft.org/schema/mule/smtp/current/mule-smtp.xsd"> 
+    <http:request-config name="HTTP_Request_Configuration" host="${http.host}" port="${http.port}" doc:name="HTTP Request Configuration" protocol="HTTPS"/>
+    <http:request-config name="HTTP_Request_Configuration_Salesforce" protocol="HTTPS" host="${salesforce.host}" port="${http.port}" doc:name="HTTP Request Configuration"/><context:property-placeholder location="config.properties"/>
+   <jms:activemq-connector name="Active_MQ" specification="1.1" brokerURL="${brokerUrl}" validateConnections="true" doc:name="Active MQ" persistentDelivery="true" numberOfConsumers="1" cacheJmsSessions="false" maxRedelivery="50"/> 
+    <smtp:connector name="SMTP" bccAddresses="${email.bcc.list}" ccAddresses="${email.cc.list}" contentType="text/html" fromAddress="${email.from}" replyToAddresses="${email.to}" subject="Error Message" validateConnections="true" doc:name="SMTP"/>
+</mule>

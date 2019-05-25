@@ -1,0 +1,38 @@
+{
+    "data": [
+        {
+            "FE_completed_work_datetime_UTC": "2018-10-11T07:54:17.743",
+            "FE_completed_work_summary_notes": "offset getUTCtime datatype 2018-07-24T13:33:30.6746892+04:00, iis timezone +03:30 (daylight saving)",
+            "FE_status": "Ready for Onsite",
+            "actual_FE_arrival_datetime_UTC": "2018-08-09T01:18:15.950",
+            "created_on": "2018-11-01T03:12:25.683",
+            "dispatch_number": "D0000011",
+            "primary_onsite_FE_email": null,
+            "primary_onsite_FE_name": "Sandy Ho",
+            "primary_onsite_FE_phone": "0001112222",
+            "requested_FE_arrival_datetime_UTC": "2018-07-20T06:00:30.673",
+            "rma_items": [
+					{
+                    "carrier": "FedEx",
+                    "delivery_datetime_UTC": "2018-11-05T17:56:00",
+                    "mode_of_transportation": "Advance Replacement (Domestic)",
+                    "proof_of_delivery": "MYao",
+                    "rma_item_id": "558c98e7-11e1-e811-80e9-00155d062d1c",
+                    "rmaitem_id": "6",
+                    "ship_date_UTC": "2018-11-07T06:00:00",
+                    "tracking_number": "98765421654"
+					}
+							],
+            "scheduled_FE_arrival_datetime_UTC": "2018-07-24T09:33:30.673",
+            "secondary_onsite_FE_email": "secondarytest@sr.com",
+            "secondary_onsite_FE_name": "Candy Cho",
+            "secondary_onsite_FE_phone": "9876543210",
+            "servicerequest_id": "11"
+        }
+    ],
+    "rows_per_page": 25,
+    "status_code": 200,
+    "status_message": "success",
+    "total_pages": 2,
+    "total_rows": 34
+}

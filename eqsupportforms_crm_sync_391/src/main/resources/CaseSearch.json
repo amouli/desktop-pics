@@ -1,0 +1,90 @@
+{
+    "data": [
+        {
+            "account_name": "",
+            "account_number": "2121262",
+            "admin_user": "",
+            "case_submission_id": "374",
+            "created_by": "Sandy Ho",
+            "created_date": "2018-08-23T02:42:08.903",
+            "crm_case_id": "886df5ff-a8a6-e811-80e5-00155d062d1c",
+            "crm_case_number": "C00074638",
+            "email": "sandyho@pneumasoftware.com",
+            "email_cc": "dummy@serviceworld.com",
+            "first_name": "Tester",
+            "is_login": "False",
+            "last_name": "Account",
+            "part_number": "",
+            "phone": "1234567980",
+            "problem_description": "this is case note",
+            "reference_doc_url": [
+                {
+                    "subject": "reference subject",
+                    "url": "www.google.com"
+                },
+                {
+                    "subject": "Facebook subject",
+                    "url": "www.facebook.com"
+                }
+            ],
+            "reference_numbers": [
+								{ "reference_number": "GoogleCASE123", "reference_number_type": "Customer Case Reference #" },
+								{ "reference_number": "GoogleISPCASE456", "reference_number_type": "ISP Case Reference #" }
+							   ],
+            "reported_reason": "",
+            "rma": {
+                "rma_id": "1878596",
+                "rma_item": [
+                    {
+                        "part_desc": "SM 6016T-URFB Dual Xeon 1U 96G DDR3 4x3.5 SATA 650W",
+                        "part_number": "121902",
+                        "quantity": "1",
+                        "rma_item_id": "329340"
+                    },
+                    {
+                        "part_desc": "System Srvc Routing-No Charge",
+                        "part_number": "97124",
+                        "quantity": "10",
+                        "rma_item_id": "329341"
+                    }
+                ],
+                "shipto_address": {
+                    "address_line_1": "70 West Madison Street, Ste 1050",
+                    "address_line_2": "Line 2",
+                    "address_line_3": "Line 3",
+                    "address_line_4": "Line 4",
+                    "attention_name": "Ship to attention name",
+                    "city": "Edina",
+                    "company_name": "John Co.",
+                    "country": "Aruba",
+                    "email": "sandyho@pneumasoftware.com",
+                    "location_name": "Ship to location name",
+                    "phone_number": "0800000123",
+                    "state": "Minnesota",
+                    "zip": "ABC1234"
+                },
+                "workto_address": {
+                    "address_line_1": "5801 Clearwater Dr",
+                    "address_line_2": "Line 2",
+                    "address_line_3": "Line 3",
+                    "address_line_4": "Line 4",
+                    "attention_name": "Worksite attention name",
+                    "city": "Minnetonka",
+                    "country": "United States",
+                    "email": "Mary@equuscs.com",
+                    "location_name": "Worksite location name",
+                    "phone_number": "1234567890",
+                    "state": "Minnesota",
+                    "zip": "55343"
+                }
+            },
+            "serial_number": "1643716",
+            "source": "QAtest",
+            "updated_date": "2018-08-23T02:42:08.903"
+        }],
+    "rows_per_page": 25,
+    "status_code": 200,
+    "status_message": "success",
+    "total_pages": 1,
+    "total_rows": 1
+}

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:smtp="http://www.mulesoft.org/schema/mule/smtp"
+	xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/smtp http://www.mulesoft.org/schema/mule/smtp/current/mule-smtp.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+<catch-exception-strategy name="systemEntitlementCatch_Exception_Strategy">
+        <set-session-variable variableName="sv_error_message" value="#[sessionVars.system_entitlement_message != null &amp;&amp; sessionVars.system_entitlement_message != &quot;&quot; ? sessionVars.system_entitlement_message : groovy:message.getExceptionPayload().getRootException().getMessage().toString()]" doc:name="sv_error_message"/>
+        <set-session-variable variableName="sv_error_details" value="#[groovy:message.getExceptionPayload().getInfo().toString()]" doc:name="sv_error_details"/>
+        <parse-template location="ExceptionTemplate.html" doc:name="Parse Template"/>
+        <set-payload value="#[sessionVars.sv_system_entitlement]" doc:name="Set Payload"/>
+      <jms:outbound-endpoint queue="${system_entitlement_failed_queue}" connector-ref="Active_MQ" doc:name="system_entitlement_failed_queue"/> 
+        <set-payload value="#[sessionVars.sv_system_entitlement]" doc:name="Set Payload"/>
+        <smtp:outbound-endpoint host="${smtp.host}" port="${smtp.port}" connector-ref="SMTP" to="${email.to}" from="${email.from}" subject="${email_subject}" cc="${email.cc.list}" bcc="${email.bcc.list}" responseTimeout="10000" doc:name="SMTP"/>
+    </catch-exception-strategy>
+</mule>

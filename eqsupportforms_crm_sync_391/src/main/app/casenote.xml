@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:dynamicscrm="http://www.mulesoft.org/schema/mule/dynamicscrm"  xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:json="http://www.mulesoft.org/schema/mule/json"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw"
+	xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/dynamicscrm http://www.mulesoft.org/schema/mule/dynamicscrm/current/mule-dynamicscrm.xsd">
+
+  <flow name="Recursive_casenoteFlow">
+    <choice doc:name="Check if last page reached">
+      <when expression="#[sessionVars.sv_total_pages_note &gt; 0]">
+        <logger message=" #['current page:  ' + sessionVars.sv_total_pages_note]" level="INFO" doc:name="Print current page number"/>
+        <flow-ref name="Messages_casenoteFlow" doc:name="Messages_casenoteFlow"/>
+      </when>
+      <otherwise>
+        <logger message="Last page reached, skip" level="INFO" doc:name="Last page reached, skip"/>
+        <set-variable variableName="fv_lastrun_note" value="#[sessionVars.sv_end_date]" doc:name="fv_lastrun_note"/>
+      </otherwise>
+    </choice>
+  </flow>
+
+  <sub-flow name="Messages_casenoteFlow">
+    <logger message="lastrun_update: #[flowVars.fv_lastrun_note_update == null? flowVars.fv_lastrun_note:flowVars.fv_lastrun_note_update]" level="INFO" doc:name="Logger"/>
+    <http:request config-ref="HTTP_Request_Configuration" path="${api.path.getNoteByDateRange}" method="GET" doc:name="HTTP Get">
+      <http:request-builder>
+        <http:query-param paramName="page" value="#[sessionVars.sv_total_pages_note]"/>
+        <http:query-param paramName="start" value="#[flowVars.fv_lastrun_note_update == null? flowVars.fv_lastrun_note:flowVars.fv_lastrun_note_update]"/>
+        <http:query-param paramName="end" value="#['2099-12-31']"/>
+      </http:request-builder>
+    </http:request>
+    <dw:transform-message doc:name="Transform Message">
+      <dw:input-payload mimeType="application/json"/>
+      <dw:set-payload>
+        <![CDATA[%dw 1.0
+%output application/json
+---
+payload.data map ((payload01 , indexOfPayload01) -> {
+   case_notes: {
+    crm_case_number: payload01.crm_case_number when payload01.crm_case_number != null otherwise "",
+    created_by: payload01.created_by when payload01.created_by != null otherwise "",
+    case_note_id: payload01.case_note_id when payload01.case_note_id != null otherwise "",
+    created_date: payload01.created_date when payload01.created_date != null otherwise "",
+    note: payload01.note when payload01.note != null otherwise "",
+	attachment_file_location: payload01.attachment_file_location when payload01.attachment_file_location != null otherwise "",
+	file_host: payload01.file_host when payload01.file_host != null otherwise "",
+	file_link_uri: payload01.file_link_uri when payload01.file_link_uri != null otherwise ""
+	}
+})]]>
+      </dw:set-payload>
+    </dw:transform-message>
+    <json:json-to-object-transformer returnClass="java.util.List" doc:name="JSON to Object List"/>
+    <enricher target="#[sessionVars.sv_end_date]" doc:name="sv_end_date">
+      <expression-component doc:name="Validate created_date format">
+        <![CDATA[import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+SimpleDateFormat outSDF = new SimpleDateFormat("yyyy-MM-dd");
+
+String dateInString = payload[0].case_notes.created_date;   
+
+Date date = formatter.parse(dateInString);
+outDate = outSDF.format(date);
+System.out.println(outDate);
+System.out.println(formatter.format(date));
+return payload=outDate;]]>
+      </expression-component>
+    </enricher>
+    <logger message="Start inserting Case Note messages to queue date : #[sessionVars.sv_end_date]" level="INFO" doc:name="Start inserting Case Note messages to queue"/>
+    <foreach counterVariableName="note_count" doc:name="For Each">
+      <set-payload value="#[payload.case_notes]" doc:name="Current Case Note"/>
+      <logger message="Note #[flowVars.note_count]:  #[payload]" level="INFO" doc:name="Current Record Info"/>
+      <jms:outbound-endpoint queue="${case_note_queue}" connector-ref="Active_MQ" doc:name="case_note_queue"/>
+    </foreach>
+    <set-session-variable variableName="sv_total_pages_note" value="#[sv_total_pages_note - 1]" doc:name="sv_total_pages_note"/>
+    <flow-ref name="Recursive_casenoteFlow" doc:name="Recursive_casenoteFlow"/>
+  </sub-flow>
+
+
+  <flow name="casenoteFlow" initialState="started" processingStrategy="synchronous">
+    <poll doc:name="Poll">
+      <fixed-frequency-scheduler frequency="1" timeUnit="HOURS" startDelay="1"/>
+      <watermark variable="fv_lastrun_note" default-expression="#['2018-07-10']" update-expression="#[flowVars.fv_lastrun_note_update]"/>
+      <processor-chain doc:name="Processor Chain">
+        <logger message="Start polling Case Note from API: Start = #[flowVars.fv_lastrun_note_update == null? flowVars.fv_lastrun_note:flowVars.fv_lastrun_note_update], End = ${enddate} " level="INFO" doc:name="Start polling Case Note from API"/>
+        <http:request config-ref="HTTP_Request_Configuration" path="${api.path.getNoteByDateRange}" method="GET" doc:name="HTTP Get">
+          <http:request-builder>
+            <http:query-param paramName="page" value="1"/>
+            <http:query-param paramName="start" value="#[flowVars.fv_lastrun_note_update == null? flowVars.fv_lastrun_note:flowVars.fv_lastrun_note_update]"/>
+            <http:query-param paramName="end" value="${enddate}"/>
+          </http:request-builder>
+        </http:request>
+      </processor-chain>
+    </poll>
+
+    <logger message="Result from note API: #[payload] " level="INFO" doc:name="Result from note API"/>
+    <json:json-to-object-transformer returnClass="java.util.HashMap" doc:name="JSON to Hash Map"/>
+    <set-session-variable variableName="sv_total_pages_note" value="#[payload.total_pages]" doc:name="sv_total_pages_note"/>
+    <flow-ref name="Recursive_casenoteFlow" doc:name="Recursive_casenoteFlow"/>
+    <set-variable variableName="fv_lastrun_note_update" value="#[flowVars.fv_lastrun_note]" doc:name="fv_lastrun_note_update"/>
+    <logger message="Finished!" level="INFO" doc:name="Finished!"/>
+    <exception-strategy ref="Catch_Exception_Handling1" doc:name="Reference Exception Strategy"/>
+  </flow>
+  <flow name="casenote_fromqueue_tocrm" initialState="started">
+    <jms:inbound-endpoint queue="${case_note_queue}" connector-ref="Active_MQ" doc:name="case_note_queue">
+      <jms:transaction action="ALWAYS_BEGIN"/>
+    </jms:inbound-endpoint>
+    <set-session-variable variableName="sv_crm_note_case" value="#[payload]" doc:name="sv_crm_note_case"/>
+    <logger message="Get casenote from queue: #[payload] with case: #[sessionVars.sv_crm_note_case.crm_case_number]" level="INFO" doc:name="Get casenote from queue"/>
+    <set-session-variable variableName="sv_case_note" value="#[payload]" doc:name="sv_case_note"/>
+    <enricher target="#[variable:caseExists]" doc:name="caseExists">
+      <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot; row=&quot;1&quot; &gt;
+    &lt;entity name=&quot;incident&quot; &gt;
+        &lt;filter&gt;
+            &lt;condition attribute=&quot;ticketnumber&quot; operator=&quot;eq&quot; value=&quot;#[payload.crm_case_number]&quot; /&gt;
+        &lt;/filter&gt;
+    &lt;/entity&gt;
+&lt;/fetch&gt;" doc:name="Query CRM Incident"/>
+    </enricher>
+    <choice doc:name="Check if case exists">
+      <when expression="#[caseExists.hasNext() == true]">
+        <logger message="Case: #[sessionVars.sv_crm_note_case.crm_case_number] exists, continue" level="INFO" doc:name="Case exists, continue"/>
+        <set-variable variableName="fv_case_info" value="#[caseExists.next()]" doc:name="fv_case_info"/>
+        <set-variable variableName="fv_case_noteid_string" value="#[flowVars.fv_case_info.new_case_noteid != null ? flowVars.fv_case_info.new_case_noteid : '']" doc:name="fv_case_noteid_string"/>
+
+        <choice doc:name="Check file link uri not empty">
+          <when expression="#[payload.file_link_uri]">
+            <dw:transform-message doc:name="Transform Message">
+              <dw:input-payload mimeType="application/java"/>
+              <dw:set-payload>
+                <![CDATA[%dw 1.0
+%output application/java
+---
+{
+	new_subject: payload.created_by when payload.created_by != null otherwise "",
+	new_url: payload.file_link_uri when payload.file_link_uri != null otherwise "",
+	new_incidentid_referenceto_incident:flowVars.fv_case_info.incidentid when flowVars.fv_case_info.incidentid != null otherwise ""
+}]]>
+              </dw:set-payload>
+            </dw:transform-message>
+            <dynamicscrm:create config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" logicalName="new_customerprovidedlink" doc:name="CRM Customer provider link"/>
+          </when>
+
+          <otherwise>
+            <logger level="INFO" doc:name="file_link_uri gets empty" message="file_link_uri gets empty ,skip"/>
+          </otherwise>
+        </choice>
+        <choice doc:name="Check if note exists">
+          <when expression="#[flowVars.fv_case_noteid_string.contains('|' + payload.crm_case_number + '|') == false]">
+            <logger message="New note, start to create with case: #[sessionVars.sv_crm_note_case.crm_case_number]" level="INFO" doc:name="New note, start to create"/>
+
+            <dw:transform-message doc:name="Transform Message">
+              <dw:input-payload mimeType="application/java"/>
+              <dw:set-payload>
+                <![CDATA[%dw 1.0
+%output application/java
+---
+using(
+	defaultUser = lookup("lookup-default-user", {
+	name: 0
+})
+)
+
+{
+	objecttypecode : 112,
+	isdocument: false,
+	ownerid_referenceto_systemuser: defaultUser.systemuserid,
+	objectid_referenceto_incident: flowVars.fv_case_info.incidentid,
+	subject: 'SSS Update' when flowVars.fv_case_info.caseorigincode == 100000008 otherwise
+		   'Google Update' when flowVars.fv_case_info.caseorigincode == 100000009 otherwise
+		   'Web Form Case Submission',
+	
+	notetext: sessionVars.sv_crm_note_case.note
+	++ '\nFile Host: ' ++ (sessionVars.sv_crm_note_case.file_host when sessionVars.sv_crm_note_case.file_host != null otherwise '')
+    ++ '\nFile Location: ' ++ (sessionVars.sv_crm_note_case.attachment_file_location when sessionVars.sv_crm_note_case.attachment_file_location != null otherwise '')
+    ++ '\nFile Link: ' ++ (sessionVars.sv_crm_note_case.file_link_uri when sessionVars.sv_crm_note_case.file_link_uri != null otherwise '')
+    
+    
+    
+    
+    
+    
+}]]>
+              </dw:set-payload>
+            </dw:transform-message>
+            <dynamicscrm:create config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" logicalName="annotation" doc:name="Create Note in CRM"/>
+            <logger message="Note created with case: #[sessionVars.sv_crm_note_case.crm_case_number], now update the new_case_noteid string in incident case" level="INFO" doc:name="Note created, now update the new_case_noteid string in incident case"/>
+            <choice doc:name="Check if case is resolved/closed">
+              <when expression="#[flowVars.fv_case_info.statecode != 0]">
+                <dw:transform-message doc:name="Transform Message">
+                  <dw:input-payload mimeType="application/java"/>
+                  <dw:set-payload>
+                    <![CDATA[%dw 1.0
+%output application/java
+---
+{
+	statecode: 0,
+	statuscode: 1
+}]]>
+                  </dw:set-payload>
+                </dw:transform-message>
+                <dynamicscrm:update config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" id="#[flowVars.fv_case_info.incidentid]" logicalName="incident" doc:name="Update Incident Status"/>
+              </when>
+              <otherwise>
+                <logger message="Case is still active" level="INFO" doc:name="Case is still active"/>
+              </otherwise>
+            </choice>
+
+            <dw:transform-message doc:name="Transform Message">
+              <dw:input-payload mimeType="application/java"/>
+              <dw:set-payload>
+                <![CDATA[%dw 1.0
+%output application/java
+---
+{
+	new_noteid: flowVars.fv_case_noteid_string ++ '|' ++ sessionVars.sv_case_note.case_note_id ++ '|'
+}]]>
+              </dw:set-payload>
+            </dw:transform-message>
+            <dynamicscrm:update config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" id="#[flowVars.fv_case_info.incidentid]" logicalName="incident" doc:name="Update Incident CRM"/>
+          </when>
+          <otherwise>
+            <logger message="Note exists in CRM, skip" level="INFO" doc:name="Note exists in CRM, skip"/>
+          </otherwise>
+        </choice>
+      </when>
+      <otherwise>
+        <logger message="Case: #[sessionVars.sv_crm_note_case.crm_case_number] does not exist, skip" level="INFO" doc:name="Case does not exist, skip"/>
+      </otherwise>
+    </choice>
+    <exception-strategy ref="Catch_Exception_Handling_Notes" doc:name="Reference Exception Strategy"/>
+  </flow>
+</mule>

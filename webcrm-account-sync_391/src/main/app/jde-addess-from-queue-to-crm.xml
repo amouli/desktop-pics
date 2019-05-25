@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:schedulers="http://www.mulesoft.org/schema/mule/schedulers" xmlns:dynamicscrm="http://www.mulesoft.org/schema/mule/dynamicscrm" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/dynamicscrm http://www.mulesoft.org/schema/mule/dynamicscrm/current/mule-dynamicscrm.xsd
+http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mule/schedulers/current/mule-schedulers.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+
+    <flow name="jde-address-from-queue-to-crm-flow" initialState="stopped" processingStrategy="synchronous">
+        <jms:inbound-endpoint queue="${jde.address_queue}" connector-ref="Active_MQ" doc:name="jde_address_queue">
+            <jms:transaction action="ALWAYS_BEGIN"/>
+        </jms:inbound-endpoint>
+        <logger message="Start Syncing Address: #[payload]" level="INFO" category="jde-address-from-queue-to-crm.jde-address-from-queue-to-crm-flow" doc:name="Start Syncing Address"/>
+        <json:object-to-json-transformer doc:name="Object to JSON"/>
+        <json:json-to-object-transformer returnClass="java.util.HashMap" doc:name="JSON to Hash Map"/>
+        <set-variable variableName="fv_jde_address" value="#[payload]" doc:name="fv_jde_address"/>
+        <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot; &gt;     &lt;entity name=&quot;account&quot; &gt;         &lt;attribute name=&quot;accountid&quot; /&gt;  &lt;attribute name=&quot;name&quot; /&gt;         &lt;filter type=&quot;and&quot; &gt;             &lt;condition entity=&quot;account&quot; attribute=&quot;accountnumber&quot; operator=&quot;eq&quot; value=&quot;#[flowVars.fv_jde_address.account_number]&quot; /&gt;         &lt;/filter&gt;                 &lt;filter type=&quot;and&quot;&gt;             &lt;condition entity=&quot;account&quot; attribute=&quot;statecode&quot; operator=&quot;eq&quot; value=&quot;0&quot; /&gt;         &lt;/filter&gt;     &lt;/entity&gt; &lt;/fetch&gt;" doc:name="Query crm for account"/>
+        <choice doc:name="Check if account exists in crm">
+            <when expression="#[payload.hasNext()]">
+                <set-variable variableName="fv_crm_account" value="#[payload.next()]" doc:name="fv_crm_account"/>
+                <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot; &gt;
+    &lt;entity name=&quot;new_addressbook&quot; &gt;
+        &lt;attribute name=&quot;new_addressbookid&quot; /&gt;
+        &lt;attribute name=&quot;new_jdeaddressid&quot; /&gt;
+        &lt;attribute name=&quot;new_addresstype&quot; /&gt;
+        &lt;attribute name=&quot;new_street1&quot; /&gt;
+        &lt;attribute name=&quot;new_street2&quot; /&gt;
+        &lt;attribute name=&quot;new_street3&quot; /&gt;
+        &lt;attribute name=&quot;new_city&quot; /&gt;
+        &lt;attribute name=&quot;new_stateprovince&quot; /&gt;
+        &lt;attribute name=&quot;new_zippostalcode&quot; /&gt;
+        &lt;attribute name=&quot;new_countryregion&quot; /&gt;
+        &lt;attribute name=&quot;new_parentaccount&quot; /&gt;
+        &lt;filter type=&quot;and&quot; &gt;
+            &lt;condition entity=&quot;address&quot; attribute=&quot;new_jdeaddressid&quot; operator=&quot;eq&quot; value=&quot;#[flowVars.fv_jde_address.address_number]&quot; /&gt;
+        &lt;/filter&gt;
+    &lt;/entity&gt;
+&lt;/fetch&gt;" doc:name="Query crm for address info"/>
+                <choice doc:name="Check If Address Exists In CRM">
+                    <when expression="#[payload.hasNext()]">
+                        <logger message="Address Exists, Start Update Address In CRM" level="INFO" doc:name="Address Exists, Start Update Address In CRM" category="jde-address-from-queue-to-crm.jde-address-from-queue-to-crm-flow"/>
+                        <set-variable variableName="fv_crm_address" value="#[payload.next()]" doc:name="fv_crm_address"/>
+                        <set-variable variableName="fv_address_type" value="#[fv_crm_address.__formattedValues.new_addresstype]" doc:name="fv_address_type"/>
+                        <choice doc:name="Check If Address Details Changed">
+                            <when expression="#[flowVars.fv_address_type!=flowVars.fv_jde_address.address_type || (flowVars.fv_crm_address.new_street1!=fv_jde_address.address_line1) || (flowVars.fv_crm_address.new_street2!=fv_jde_address.address_line2) || (flowVars.fv_crm_address.new_street3!=fv_jde_address.address_line3) || (flowVars.fv_crm_address.new_city!=fv_jde_address.city) || (flowVars.fv_crm_address.new_stateprovince!=fv_jde_address.state) || (flowVars.fv_crm_address.new_zippostalcode!=fv_jde_address.postal_code) || (flowVars.fv_crm_address.new_countryregion!=fv_jde_address.country)]">
+                                <dw:transform-message doc:name="Transform Address For CRM Update" metadata:id="4df434ef-a988-48b2-85c8-0978e648f04b">
+                                    <dw:input-payload mimeType="application/java"/>
+                                    <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+using(
+	lookupAddress = lookup("lookup-addressType", {
+	address_type: flowVars.fv_jde_address.address_type
+})
+)
+{
+	new_addresstype: lookupAddress.addressType,
+	new_street1: flowVars.fv_jde_address.address_line1,
+	new_street2: flowVars.fv_jde_address.address_line2,
+	new_street3: flowVars.fv_jde_address.address_line3,
+	new_city: flowVars.fv_jde_address.city,
+	new_stateprovince: flowVars.fv_jde_address.state,
+	new_zippostalcode: flowVars.fv_jde_address.postal_code,
+	new_countryregion: flowVars.fv_jde_address.country,
+	modifiedon: now >> "America/Chicago"
+}]]></dw:set-payload>
+                                </dw:transform-message>
+                                <dynamicscrm:update config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" id="#[flowVars.fv_crm_address.new_addressbookid]" logicalName="new_addressbook" doc:name="Update CRM Address"/>
+                                <logger message="Address #[flowVars.fv_jde_address.address_number] Has Been Updated In CRM" level="INFO" doc:name="Done Update" category="jde-address-from-queue-to-crm.jde-address-from-queue-to-crm-flow"/>
+                            </when>
+                            <otherwise>
+                                <logger message="Address Detail Same With CRM, Skip" level="INFO" doc:name="Address Detail Same With CRM, Skip" category="jde-address-from-queue-to-crm.jde-address-from-queue-to-crm-flow"/>
+                            </otherwise>
+                        </choice>
+                    </when>
+                    <otherwise>
+                        <logger message="Address Doesn't Exist, Start Create New Address in CRM" level="INFO" doc:name="Address Doesn't Exist, Start Create New Address in CRM" category="jde-address-from-queue-to-crm.jde-address-from-queue-to-crm-flow"/>
+                        <dw:transform-message doc:name="Transform Address For CRM Create" metadata:id="4df434ef-a988-48b2-85c8-0978e648f04b">
+                            <dw:input-payload mimeType="application/java"/>
+                            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+using(
+	lookupAddress = lookup("lookup-addressType", {
+	address_type: flowVars.fv_jde_address.address_type
+})
+)
+{
+	new_parentaccount_referenceto_account: flowVars.fv_crm_account.accountid,
+	new_addresstype: lookupAddress.addressType,
+	new_street1: flowVars.fv_jde_address.address_line1,
+	new_street2: flowVars.fv_jde_address.address_line2,
+	new_street3: flowVars.fv_jde_address.address_line3,
+	new_city: flowVars.fv_jde_address.city,
+	new_stateprovince: flowVars.fv_jde_address.state,
+	new_zippostalcode: flowVars.fv_jde_address.postal_code,
+	new_countryregion: flowVars.fv_jde_address.country,
+	new_jdeaddressid: flowVars.fv_jde_address.address_number,
+	
+	createdon: now >> "America/Chicago",
+	new_name: flowVars.fv_crm_account.name
+	
+	
+}]]></dw:set-payload>
+                        </dw:transform-message>
+                        <enricher target="#[variable:crm_new_addressbookid]" doc:name="crm_new_addressbookid">
+                            <dynamicscrm:create config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" logicalName="new_addressbook" doc:name="Create CRM Address"/>
+                        </enricher>
+                        <logger message="New Address Has Been Created:  ##[flowVars.crm_new_addressbookid]" level="INFO" doc:name="Done Create" category="jde-address-from-queue-to-crm.jde-address-from-queue-to-crm-flow"/>
+                    </otherwise>
+                </choice>
+            </when>
+            <otherwise>
+                <logger message="Account Number #[flowVars.account_number] Does Not Exist, Skip" level="INFO" doc:name="Account Not Exists, Skip To Next Account" category="jde-address-from-queue-to-crm.jde-address-from-queue-to-crm-flow"/>
+            </otherwise>
+        </choice>
+        <logger message="Finished Address Sync From JDE Address Queue To CRM At: #[new java.text.SimpleDateFormat('yyyy-MM-dd hh:mm:ss aa').format(new java.util.Date())]" level="INFO" doc:name="Finished" category="jde-address-from-queue-to-crm.jde-address-from-queue-to-crm-flow"/>
+        <exception-strategy ref="Catch_Exception_Handling1" doc:name="Reference Exception Strategy"/>
+
+    </flow>
+
+</mule>

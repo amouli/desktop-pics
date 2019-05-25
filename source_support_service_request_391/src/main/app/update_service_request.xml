@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:dynamicscrm="http://www.mulesoft.org/schema/mule/dynamicscrm" xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/dynamicscrm http://www.mulesoft.org/schema/mule/dynamicscrm/current/mule-dynamicscrm.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <flow name="update_service_requestFlow" processingStrategy="synchronous" initialState="started">
+        <jms:inbound-endpoint queue="${update_service_request}" connector-ref="Active_MQ" doc:name="update_service_request"/>
+        <logger message="Get Update Service Request from queue" level="INFO" doc:name="Get Update Service Request from queue"/>
+
+        <set-session-variable variableName="sv_update_service_request" value="#[payload]" doc:name="sv_update_service_request"/>
+     <dw:transform-message doc:name="Transform Message">
+        <dw:input-payload mimeType="application/java"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+	new_onsitecompanydispatchreferencenumber: payload.new_onsitecompanydispatchreferencenumber,
+	new_equusdispatchnumber: payload.new_equusdispatchnumber,
+	new_caseidtxt: payload.new_caseidtxt
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="Start to update the Service request in crm" level="INFO" doc:name="Start to update the Service request in crm"/> 
+        <expression-component doc:name="Set Error Var"><![CDATA[sessionVars.updateServicerequest= " Service Request Id "+sessionVars.sv_update_service_request.new_servicerequestid+" pulling from Queue does not exist that record "+payload.new_equusdispatchnumber+" in CRM Service Request Entity"]]></expression-component>
+        <dynamicscrm:update config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" id="#[sessionVars.sv_update_service_request.new_servicerequestid]" logicalName="new_servicerequest" doc:name="Microsoft Dynamics CRM"/>
+        <logger message="Finished the Source Support Service from Queue to CRM Service processed successfully" level="INFO" doc:name="Finished"/>
+
+        <exception-strategy ref="updateServiceRequestCatch_Exception_Strategy" doc:name="Reference Exception Strategy"/>
+    </flow>
+</mule>

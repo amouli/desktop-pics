@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:dynamicscrm="http://www.mulesoft.org/schema/mule/dynamicscrm" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/dynamicscrm http://www.mulesoft.org/schema/mule/dynamicscrm/current/mule-dynamicscrm.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+
+    <flow name="lookup-user">
+        <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot;&gt;&lt;entity name=&quot;systemuser&quot;&gt;&lt;attribute name=&quot;systemuserid&quot; /&gt;&lt;filter&gt;&lt;condition attribute=&quot;domainname&quot; operator=&quot;eq&quot; value=&quot;#[payload.name]&quot; /&gt;&lt;/filter&gt;&lt;/entity&gt;&lt;/fetch&gt;" doc:name="Microsoft Dynamics CRM"/>
+   		<set-payload value="#[payload.hasNext() ? payload.next() : null]" doc:name="Set Payload"/>
+        <logger message="User :: #[payload]" level="INFO" doc:name="User"/>
+    </flow>
+    <flow name="lookup-default-user">
+        <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot;&gt;&lt;entity name=&quot;systemuser&quot;&gt;&lt;attribute name=&quot;systemuserid&quot; /&gt;&lt;filter&gt;&lt;condition attribute=&quot;domainname&quot; operator=&quot;eq&quot; value=&quot;${default.DomainName}&quot;  /&gt;&lt;/filter&gt;&lt;/entity&gt;&lt;/fetch&gt;" doc:name="Microsoft Dynamics CRM"/>
+    	<set-payload value="#[payload.hasNext() ? payload.next() : null]" doc:name="Set Payload"/>
+        <logger message="DefaultUser :: #[payload]" level="INFO" doc:name="DefaultUser"/>
+    </flow>
+
+    <flow name="lookup-addressType">
+        <choice doc:name="Choice">
+            <when expression="#[payload.address_type == &quot;Bill To&quot;]">
+                <set-payload value="{&quot;addressType&quot;:100000000}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.address_type == &quot;Ship To&quot;]">
+                <set-payload value="{&quot;addressType&quot;:100000001}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.address_type == &quot;Primary&quot;]">
+                <set-payload value="{&quot;addressType&quot;:100000002}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <otherwise>
+                <set-payload value="{&quot;addressType&quot;:100000003}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </otherwise>
+        </choice>
+    </flow>
+    <flow name="lookup-address">
+        <http:request config-ref="HTTP_Request_Configuration" path="/GetAccountAddress" method="GET" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="AppID" value="test"/>
+                <http:header headerName="AppPwd" value="test"/>
+
+            </http:request-builder>
+        </http:request>
+    </flow>
+    <flow name="lookup-accountinfo">
+        <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot;&gt;&lt;entity name=&quot;account&quot;&gt;&lt;filter&gt;&lt;condition attribute=&quot;accountnumber&quot; operator=&quot;eq&quot; value=&quot;#[payload.id]&quot; /&gt;&lt;/filter&gt;&lt;/entity&gt;&lt;/fetch&gt;" doc:name="Microsoft Dynamics CRM"/>
+    </flow>
+    <flow name="lookup-branchnumber">
+      <choice doc:name="Choice">
+           <when expression="#[payload.new_branchnumber == &quot;0&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640000}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.new_branchnumber == &quot;1&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640001}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.new_branchnumber == &quot;2&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640002}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.new_branchnumber == &quot;3&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640003}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.new_branchnumber == &quot;4&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640004}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.new_branchnumber == &quot;5&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640005}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.new_branchnumber == &quot;6&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640006}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.new_branchnumber == &quot;7&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640007}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.new_branchnumber == &quot;8&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640008}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.new_branchnumber == &quot;9&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640009}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.new_branchnumber == &quot;10&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640010}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.new_branchnumber == &quot;11&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640011}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.new_branchnumber == &quot;12&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640012}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.new_branchnumber == &quot;13&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640034}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.new_branchnumber == &quot;14&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:100000000}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.new_branchnumber == &quot;15&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640014}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.new_branchnumber == &quot;16&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640015}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.new_branchnumber == &quot;17&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640016}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.new_branchnumber == &quot;18&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640017}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.new_branchnumber == &quot;19&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640018}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.new_branchnumber == &quot;20&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640019}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            
+             <when expression="#[payload.new_branchnumber == &quot;22&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640020}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.new_branchnumber == &quot;23&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640021}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+             <when expression="#[payload.new_branchnumber == &quot;24&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640022}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when> 
+            <when expression="#[payload.new_branchnumber == &quot;25&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640023}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+
+            </when> 
+            <when expression="#[payload.new_branchnumber == &quot;26&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640024}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when> 
+            <when expression="#[payload.new_branchnumber == &quot;27&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640025}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.new_branchnumber == &quot;28&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640026}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.new_branchnumber == &quot;29&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640027}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.new_branchnumber == &quot;30&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640028}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.new_branchnumber == &quot;31&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640029}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.new_branchnumber == &quot;32&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640030}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            
+            <when expression="#[payload.new_branchnumber == &quot;35&quot;]">
+                <set-payload value="{&quot;new_branchnumber&quot;:279640031}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+                        
+            <otherwise>
+                <logger message="Please Check the Branch Number" level="INFO" doc:name="Logger"/>
+
+            </otherwise>
+        </choice>
+    </flow>
+    <flow name="lookup-region">
+        <choice doc:name="Choice">
+            <when expression="#[payload.accountregion == &quot;Minnesota&quot;]">
+                <set-payload value="{&quot;accountregion&quot;:100000000}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.accountregion == &quot;Kansas&quot;]">
+                <set-payload value="{&quot;accountregion&quot;:100000001}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.accountregion == &quot;Illinois&quot;]">
+                <set-payload value="{&quot;accountregion&quot;:100000002}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.accountregion == &quot;Missouri&quot;]">
+                <set-payload value="{&quot;accountregion&quot;:100000003}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.accountregion == &quot;Michigan&quot;]">
+                <set-payload value="{&quot;accountregion&quot;:100000004}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.accountregion == &quot;Ohio&quot;]">
+                <set-payload value="{&quot;accountregion&quot;:100000005}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.accountregion == &quot;Colorado&quot;]">
+                <set-payload value="{&quot;accountregion&quot;:100000006}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.accountregion == &quot;Missouri&quot;]">
+                <set-payload value="{&quot;accountregion&quot;:100000007}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.accountregion == &quot;Washington&quot;]">
+                <set-payload value="{&quot;accountregion&quot;:100000008}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.accountregion == &quot;Georgia&quot;]">
+                <set-payload value="{&quot;accountregion&quot;:100000009}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.accountregion == &quot;ISV&quot;]">
+                <set-payload value="{&quot;accountregion&quot;:100000010}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.accountregion == &quot;Texas&quot;]">
+                <set-payload value="{&quot;accountregion&quot;:100000011}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.accountregion == &quot;Intequus&quot;]">
+                <set-payload value="{&quot;accountregion&quot;:100000012}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.accountregion == &quot;UST&quot;]">
+                <set-payload value="{&quot;accountregion&quot;:100000013}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.accountregion == &quot;California&quot;]">
+                <set-payload value="{&quot;accountregion&quot;:100000014}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.accountregion == &quot;MSP&quot;]">
+                <set-payload value="{&quot;accountregion&quot;:100000015}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <when expression="#[payload.accountregion == &quot;Servers Direct&quot;]">
+                <set-payload value="{&quot;accountregion&quot;:100000016}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </when>
+            <otherwise>
+                <set-payload value="{&quot;accountregion&quot;:100000017}" doc:name="Set Payload"/>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+            </otherwise>
+        </choice>
+    </flow>
+    <flow name="lookup-summary">
+        <http:request config-ref="HTTP_Request_Configuration" path="/GetAccountSalesSummary" method="GET" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="AppID" value="test"/>
+                <http:header headerName="AppPwd" value="test"/>
+
+            </http:request-builder>
+        </http:request>
+    </flow>
+</mule>

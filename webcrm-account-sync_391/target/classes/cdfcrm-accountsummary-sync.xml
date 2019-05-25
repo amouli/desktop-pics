@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:schedulers="http://www.mulesoft.org/schema/mule/schedulers" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:dynamicscrm="http://www.mulesoft.org/schema/mule/dynamicscrm"
+	xmlns:json="http://www.mulesoft.org/schema/mule/json"
+	xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/dynamicscrm http://www.mulesoft.org/schema/mule/dynamicscrm/current/mule-dynamicscrm.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mule/schedulers/current/mule-schedulers.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+
+  <flow name="webcrm-accountsummary-syncFlow" initialState="stopped" processingStrategy="synchronous">
+    <poll doc:name="Poll">
+      <schedulers:cron-scheduler expression="0 1 14 * * ?"/>
+      <processor-chain doc:name="Processor Chain">
+
+        <logger message="Start pulling AccountSalesSummary from API " level="INFO" doc:name="Start pulling AccountSalesSummary from API "/>
+        <http:request config-ref="HTTP_Request_Configuration" path="${api.path.summary}" method="GET" doc:name="HTTP">
+          <http:request-builder>
+            <http:header headerName="AppID" value="${api.appID}"/>
+            <http:header headerName="AppPwd" value="${api.appPwd}"/>
+            <http:header headerName="Content-Type" value="${api.contentType}"/>
+
+
+          </http:request-builder>
+        </http:request>
+      </processor-chain>
+    </poll>
+    <logger message="Result from GetAccountISalesSummary API : #[payload] " level="INFO" doc:name="Result from API"/>
+    <dw:transform-message doc:name="Transform Message">
+      <dw:input-payload mimeType="application/json"/>
+      <dw:set-payload>
+        <![CDATA[%dw 1.0
+%output application/json
+---
+payload map ((payload01 , indexOfPayload01) -> {
+   summary: {
+   	account_number: payload01.account_number,
+   	new_jdefirstinvoicedate: payload01.first_invoice_date,    
+   	new_3ybe4sale: 0 when payload01.three_years_ago_sales == null otherwise payload01.three_years_ago_sales as :number,
+    new_priorytdsale: 0 when payload01.two_years_ago_sales == null otherwise payload01.two_years_ago_sales as :number,
+    new_lastytdsale: 0 when payload01.year_ago_sales == null otherwise  payload01.year_ago_sales as :number,
+    new_ytdsale: 0 when payload01.ytd_sales == null otherwise  payload01.ytd_sales as :number,
+    new_mtdinvoicessales: 0 when payload01.mtd_sales == null otherwise  payload01.mtd_sales as :number,
+    new_opensalesorders: 0 when payload01.open_orders == null otherwise  payload01.open_orders as :number,
+    new_salesqtd: 0 when payload01.qtd_sales == null otherwise  payload01.qtd_sales as :number,
+	new_two_seventy_days_sales: 0 when payload01.two_seventy_days_sales == null otherwise  payload01.two_seventy_days_sales as :number,
+	new_two_seventy_days_cost: 0 when payload01.two_seventy_days_cost == null otherwise  payload01.two_seventy_days_cost as :number,
+	new_two_seventy_days_gross_margin: 0 when payload01.two_seventy_days_gross_margin == null otherwise  payload01.two_seventy_days_gross_margin as :number
+	}
+})]]>
+      </dw:set-payload>
+    </dw:transform-message>
+    <json:json-to-object-transformer returnClass="java.util.List" doc:name="JSON to Object List"/>
+    <logger message="Start insert Sales Summary messages to queue" level="INFO" doc:name="Start insert Sales Summary messages to queue"/>
+
+    <foreach counterVariableName="account_count" doc:name="For Each Sales Summary">
+      <set-payload value="#[payload.summary]" doc:name="Current Account Summary"/>
+      <logger message="Record  #[flowVars.account_count]:  #[payload]" level="INFO" doc:name="Current Record Info"/>
+      <jms:outbound-endpoint connector-ref="Active_MQ" doc:name="jde_accountsummary_queue" queue="${jde.accountsummary_queue}"/>
+
+
+    </foreach>
+
+    <logger message="Finished inserting Sales Summary message into queue at: #[server.dateTime]" level="INFO" doc:name="Finished!"/>
+    <exception-strategy ref="Catch_Exception_Handling1" doc:name="Reference Exception Strategy"/>
+  </flow>
+  <flow name="cdfcrm-accountsummary-syncFlow" initialState="started" processingStrategy="synchronous">
+    <jms:inbound-endpoint doc:name="jde_accountsummary_queue" connector-ref="Active_MQ" queue="${jde.accountsummary_queue}">
+      <jms:transaction action="ALWAYS_BEGIN"/>
+    </jms:inbound-endpoint>
+    <set-variable variableName="fv_current_summary" value="#[payload]" doc:name="fv_current_summary"/>
+    <enricher target="#[variable:accountExists]" doc:name="accountExist">
+      <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot; &gt;
+    &lt;entity name=&quot;account&quot; &gt;
+        &lt;attribute name=&quot;accountnumber&quot; /&gt;
+        &lt;attribute name=&quot;new_ytdsale&quot; /&gt;
+        &lt;attribute name=&quot;new_lastytdsale&quot; /&gt;
+        &lt;attribute name=&quot;new_priorytdsale&quot; /&gt;
+        &lt;attribute name=&quot;new_3ybe4sale&quot; /&gt;
+        &lt;attribute name=&quot;new_mtdinvoicessales&quot; /&gt;
+        &lt;attribute name=&quot;new_opensalesorders&quot; /&gt;
+        &lt;attribute name=&quot;new_salesqtd&quot; /&gt;
+        &lt;attribute name=&quot;new_two_seventy_days_sales&quot; /&gt;
+        &lt;attribute name=&quot;new_two_seventy_days_cost&quot; /&gt;
+        &lt;attribute name=&quot;new_two_seventy_days_gross_margin&quot; /&gt;
+        &lt;attribute name=&quot;new_jdefirstinvoicedate&quot; /&gt;
+        &lt;attribute name=&quot;accountid&quot; /&gt;
+        &lt;filter type=&quot;and&quot; &gt;
+            &lt;condition attribute=&quot;accountnumber&quot; operator=&quot;eq&quot; value=&quot;#[flowVars.fv_current_summary.account_number]&quot; /&gt;
+            &lt;condition attribute=&quot;statecode&quot; operator=&quot;eq&quot; value=&quot;0&quot; /&gt;
+        &lt;/filter&gt;
+    &lt;/entity&gt;
+&lt;/fetch&gt;" doc:name="Query CRM Account"/>
+    </enricher>
+    <choice doc:name="Check if account exists">
+      <when expression="#[accountExists.hasNext()]">
+        <logger message="Account #[flowVars.fv_current_summary.account_number] Exists" level="INFO" doc:name="Account Exists"/>
+        <set-variable variableName="fv_crmresult" value="#[accountExists.next()]" doc:name="fv_crmresult"/>
+        <choice doc:name="Check if there is any different in accountsummary">
+          <when expression="fv_crmresult.new_3ybe4sale!=fv_current_summary.new_3ybe4sale||fv_crmresult.new_priorytdsale!=fv_current_summary.new_priorytdsale||fv_crmresult.new_lastytdsale!=fv_current_summary.new_lastytdsale||fv_crmresult.new_ytdsale!=fv_current_summary.new_ytdsale||fv_crmresult.new_mtdinvoicessales!=fv_current_summary.new_mtdinvoicessales||fv_crmresult.new_opensalesorders!=fv_current_summary.new_opensalesorders||fv_crmresult.new_salesqtd!=fv_current_summary.new_salesqtd||fv_crmresult.new_two_seventy_days_sales!=fv_current_summary.new_two_seventy_days_sales||fv_crmresult.new_two_seventy_days_cost!=fv_current_summary.new_two_seventy_days_cost||fv_crmresult.new_two_seventy_days_gross_margin!=fv_current_summary.new_two_seventy_days_gross_margin||flowVars.fv_crmresult.new_jdefirstinvoicedate == null">
+            <logger message="Sales Summary Changed, Start Update" level="INFO" doc:name="Update"/>
+            <dw:transform-message doc:name="Transform Message">
+              <dw:input-payload mimeType="application/java"/>
+              <dw:set-payload>
+                <![CDATA[%dw 1.0
+%output application/java
+---
+{
+	new_3ybe4sale: payload.new_3ybe4sale as :string {format :"0.00"} as :number {class: "java.math.BigDecimal"},
+    new_priorytdsale: payload.new_priorytdsale as :string {format :"0.00"} as :number {class: "java.math.BigDecimal"},
+    new_lastytdsale: payload.new_lastytdsale as :string {format :"0.00"} as :number {class: "java.math.BigDecimal"},
+    new_ytdsale: payload.new_ytdsale as :string {format :"0.00"} as :number {class: "java.math.BigDecimal"}, 
+    new_mtdinvoicessales: payload.new_mtdinvoicessales as :string {format :"0.00"} as :number {class: "java.math.BigDecimal"},
+    new_opensalesorders: payload.new_opensalesorders as :string {format :"0.00"} as :number {class: "java.math.BigDecimal"},
+    new_salesqtd: payload.new_salesqtd as :string {format :"0.00"} as :number {class: "java.math.BigDecimal"},
+    new_two_seventy_days_sales: payload.new_two_seventy_days_sales as :string {format :"0.00"} as :number {class: "java.math.BigDecimal"},
+    new_two_seventy_days_cost: payload.new_two_seventy_days_cost as :string {format :"0.00"} as :number {class: "java.math.BigDecimal"},
+	new_two_seventy_days_gross_margin: payload.new_two_seventy_days_gross_margin as :string {format :"0.0000"} as :number {class: "java.math.BigDecimal"} 
+    
+    }]]>
+              </dw:set-payload>
+            </dw:transform-message>
+            <expression-component doc:name="add first invoice date to payload">
+              <![CDATA[// if first invoice date is not null and start from 1/1/2017, add it to payload to update in crm
+import java.text.SimpleDateFormat;  
+import java.util.Date;  
+
+if( flowVars.fv_current_summary.new_jdefirstinvoicedate != null)
+{
+		payload.new_jdefirstinvoicedate = new SimpleDateFormat("MM/dd/yyyy").parse(flowVars.fv_current_summary.new_jdefirstinvoicedate);
+}
+
+return payload;
+
+
+]]>
+            </expression-component>
+            <dynamicscrm:update config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" id="#[fv_crmresult.accountid]" logicalName="account" doc:name="Microsoft Dynamics CRM"/>
+          </when>
+          <otherwise>
+            <logger message="No Difference Found, Skip" level="INFO" doc:name="No Difference Found"/>
+          </otherwise>
+        </choice>
+
+      </when>
+      <otherwise>
+        <logger message="Account Number #[flowVars.fv_current_summary.account_number] Not Found, Skip" level="INFO" doc:name="Account Number not Found"/>
+      </otherwise>
+    </choice>
+    <logger message="Finished Syncing Account Summary To CRM at: #[server.dateTime]" level="INFO" doc:name="Finished!"/>
+    <exception-strategy ref="Catch_Exception_Handling1" doc:name="Reference Exception Strategy"/>
+  </flow>
+
+
+
+
+
+</mule>

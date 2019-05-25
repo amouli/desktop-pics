@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:schedulers="http://www.mulesoft.org/schema/mule/schedulers" xmlns:dynamicscrm="http://www.mulesoft.org/schema/mule/dynamicscrm" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/dynamicscrm http://www.mulesoft.org/schema/mule/dynamicscrm/current/mule-dynamicscrm.xsd
+http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mule/schedulers/current/mule-schedulers.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+
+    <flow name="jde-address-to-queue-flow" initialState="stopped" processingStrategy="synchronous">
+        <poll doc:name="Poll">
+            <fixed-frequency-scheduler frequency="12" timeUnit="HOURS"/>
+            <watermark variable="fv_lastrun" default-expression="#['2017-12-19T16:29:23']" update-expression="#[flowVars.fv_lastrun_address]"/>
+            <processor-chain doc:name="Processor Chain">
+                <logger message="jde-address-to-queue-flow start at #[new java.text.SimpleDateFormat('yyyy-MM-dd hh:mm:ss aa').format(new java.util.Date())]" level="INFO" doc:name="Poll Date" category="jde-address-to-queue.jde-address-to-queue-flow"/>
+                <set-payload value="{
+  &quot;str_start_date&quot;: &quot;#[flowVars.fv_lastrun]&quot;,
+  &quot;str_end_date&quot;: &quot;2099-12-31&quot;
+}" doc:name="Set Payload"/>
+                <http:request config-ref="HTTP_Request_Configuration" path="${api.path.address}" method="POST" doc:name="Call GetAccountAddress API">
+                    <http:request-builder>
+                        <http:header headerName="AppID" value="${api.appID}"/>
+                        <http:header headerName="AppPwd" value="${api.appPwd}"/>
+                        <http:header headerName="Content-Type" value="${api.contentType}"/>
+                    </http:request-builder>
+                </http:request>
+            </processor-chain>
+        </poll>
+        <dw:transform-message doc:name="Transform jde_address from api">
+            <dw:input-payload mimeType="application/json"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload map ((payload01 , indexOfPayload01) -> {
+
+			 account_number: payload01.account_number,
+			 address_number: payload01.address_number,
+			 address_type: payload01.address_type,
+			 address_line1: payload01.address_line1,
+			 address_line2: payload01.address_line2,
+			 address_line3: payload01.address_line3,
+			 city: payload01.city,
+			 county: payload01.county,
+			 country: payload01.country,
+			 state: payload01.state,
+			 postal_code: payload01.postal_code,
+			 business_unit: payload01.business_unit,
+			 updated_date: payload01.updated_date
+			 	 
+
+})
+
+]]></dw:set-payload>
+        </dw:transform-message>
+
+        <json:json-to-object-transformer returnClass="java.util.List" doc:name="JSON to Object List" />
+        <choice doc:name="Check if payload is not empty">
+            <when expression="#[payload.size() &gt; 0]">
+                <foreach collection="#[payload]" doc:name="For Each">
+                    <logger message="Add jde address to queue : count = #[flowVars.counter] : #[payload]" level="INFO" doc:name="Add jde address to queue" category="jde-address-to-queue.jde-address-to-queue-flow"/>
+                    <jms:outbound-endpoint queue="${jde.address_queue}" connector-ref="Active_MQ" doc:name="jde_address_queue"/>
+                    <set-variable variableName="fv_lastrun_address" value="#[payload.updated_date]" doc:name="fv_lastrun_address"/>
+                </foreach>
+            </when>
+            <otherwise>
+                <logger message="No address found, skip" level="INFO" doc:name="No address found, skip" category="jde-address-to-queue.jde-address-to-queue-flow"/>
+            </otherwise>
+        </choice>
+        <logger message="jde-address-to-queue-flow finished at: #[new java.text.SimpleDateFormat('yyyy-MM-dd hh:mm:ss aa').format(new java.util.Date())]" level="INFO" doc:name="Finished" category="jde-address-to-queue.jde-address-to-queue-flow"/>
+        <exception-strategy ref="Catch_Exception_Handling1" doc:name="Reference Exception Strategy"/>
+
+    </flow>
+
+</mule>

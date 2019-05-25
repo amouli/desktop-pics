@@ -1,0 +1,833 @@
+2019-04-08 22:05:16,580 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Initializing app 'db'                                    +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-08 22:05:16,967 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising RegistryBroker
+2019-04-08 22:05:17,228 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Starting discovery of extensions
+2019-04-08 22:05:17,780 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Discovered 1 extensions
+2019-04-08 22:05:17,780 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Registering extension validation (version 3.9)
+2019-04-08 22:05:17,854 [main] INFO  org.mule.config.spring.MuleArtifactContext - Refreshing org.mule.config.spring.MuleArtifactContext@b5cc23a: startup date [Mon Apr 08 22:05:17 IST 2019]; root of context hierarchy
+2019-04-08 22:05:20,124 [main] INFO  org.mule.config.spring.processors.NoDevkitInjectorProcessor - JSR-330 'javax.inject.Inject' annotation found and supported for autowiring
+2019-04-08 22:05:20,839 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-08 22:05:20,839 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-08 22:05:20,839 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-08 22:05:20,839 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-08 22:05:21,760 [main] WARN  org.mule.module.ognl.expression.OgnlExpressionEvaluator - OGNL module is deprecated and will be removed in Mule 4.0. Use MEL expressions instead.
+2019-04-08 22:05:22,156 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx2.log
+2019-04-08 22:05:22,178 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx2.log
+2019-04-08 22:05:22,510 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising model: _muleSystemModel
+2019-04-08 22:05:22,521 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Initialising flow: dbFlow
+2019-04-08 22:05:22,522 [main] INFO  org.mule.exception.DefaultMessagingExceptionStrategy - Initialising exception listener: org.mule.exception.DefaultMessagingExceptionStrategy@3596b249
+2019-04-08 22:05:22,567 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Initialising service: dbFlow.stage1
+2019-04-08 22:05:23,063 [main] INFO  org.mule.config.spring.SpringXmlConfigurationBuilder - Configured Mule using "org.mule.config.spring.SpringXmlConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-08 22:05:23,064 [main] INFO  org.mule.config.builders.AutoConfigurationBuilder - Configured Mule using "org.mule.config.builders.AutoConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-08 22:05:23,071 [main] INFO  com.mulesoft.module.policies.lifecyle.GateKeeper - GateKeeper Mode: DISABLED
+2019-04-08 22:05:23,071 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Starting app 'db'                                        +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-08 22:05:23,073 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Starting ResourceManager
+2019-04-08 22:05:23,073 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Started ResourceManager
+2019-04-08 22:05:23,148 [main] INFO  org.mule.module.http.internal.listener.DefaultHttpListenerConfig - Listening for requests on http://0.0.0.0:8081
+2019-04-08 22:05:23,151 [main] INFO  org.mule.modules.oauth2.provider.agents.DefaultSplashScreenAgent - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ DevKit Extensions (0) used in this application 
+                             +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-08 22:05:23,156 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Starting model: _muleSystemModel
+2019-04-08 22:05:23,158 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Starting flow: dbFlow
+2019-04-08 22:05:23,159 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Starting service: dbFlow.stage1
+2019-04-08 22:05:23,247 [main] INFO  org.mule.module.management.agent.WrapperManagerAgent - This JVM hasn't been launched by the wrapper, the agent will not run.
+2019-04-08 22:05:23,310 [main] INFO  org.mule.DefaultMuleContext - 
+**********************************************************************
+* Application: db                                                    *
+* OS encoding: \, Mule encoding: UTF-8                               *
+*                                                                    *
+* Agents Running:                                                    *
+*   Batch module default engine                                      *
+*   DevKit Extension Information                                     *
+*   JMX Agent                                                        *
+*   Wrapper Manager                                                  *
+**********************************************************************
+2019-04-08 22:06:15,324 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Initializing app 'db'                                    +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-08 22:06:15,562 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising RegistryBroker
+2019-04-08 22:06:15,704 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Starting discovery of extensions
+2019-04-08 22:06:16,005 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Discovered 1 extensions
+2019-04-08 22:06:16,005 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Registering extension validation (version 3.9)
+2019-04-08 22:06:16,054 [main] INFO  org.mule.config.spring.MuleArtifactContext - Refreshing org.mule.config.spring.MuleArtifactContext@3591009c: startup date [Mon Apr 08 22:06:16 IST 2019]; root of context hierarchy
+2019-04-08 22:06:17,829 [main] INFO  org.mule.config.spring.processors.NoDevkitInjectorProcessor - JSR-330 'javax.inject.Inject' annotation found and supported for autowiring
+2019-04-08 22:06:18,195 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-08 22:06:18,195 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-08 22:06:18,195 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-08 22:06:18,195 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-08 22:06:18,846 [main] WARN  org.mule.module.ognl.expression.OgnlExpressionEvaluator - OGNL module is deprecated and will be removed in Mule 4.0. Use MEL expressions instead.
+2019-04-08 22:06:19,155 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx2.log
+2019-04-08 22:06:19,175 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx2.log
+2019-04-08 22:06:19,378 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising model: _muleSystemModel
+2019-04-08 22:06:19,382 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Initialising flow: dbFlow
+2019-04-08 22:06:19,382 [main] INFO  org.mule.exception.DefaultMessagingExceptionStrategy - Initialising exception listener: org.mule.exception.DefaultMessagingExceptionStrategy@65bb6275
+2019-04-08 22:06:19,409 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Initialising service: dbFlow.stage1
+2019-04-08 22:06:19,643 [main] INFO  org.mule.config.spring.SpringXmlConfigurationBuilder - Configured Mule using "org.mule.config.spring.SpringXmlConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-08 22:06:19,643 [main] INFO  org.mule.config.builders.AutoConfigurationBuilder - Configured Mule using "org.mule.config.builders.AutoConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-08 22:06:19,652 [main] INFO  com.mulesoft.module.policies.lifecyle.GateKeeper - GateKeeper Mode: DISABLED
+2019-04-08 22:06:19,653 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Starting app 'db'                                        +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-08 22:06:19,655 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Starting ResourceManager
+2019-04-08 22:06:19,655 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Started ResourceManager
+2019-04-08 22:06:19,702 [main] INFO  org.mule.module.http.internal.listener.DefaultHttpListenerConfig - Listening for requests on http://0.0.0.0:8081
+2019-04-08 22:06:19,705 [main] INFO  org.mule.modules.oauth2.provider.agents.DefaultSplashScreenAgent - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ DevKit Extensions (0) used in this application 
+                             +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-08 22:06:19,707 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Starting model: _muleSystemModel
+2019-04-08 22:06:19,708 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Starting flow: dbFlow
+2019-04-08 22:06:19,708 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Starting service: dbFlow.stage1
+2019-04-08 22:06:19,753 [main] INFO  org.mule.module.management.agent.WrapperManagerAgent - This JVM hasn't been launched by the wrapper, the agent will not run.
+2019-04-08 22:06:19,778 [main] INFO  org.mule.DefaultMuleContext - 
+**********************************************************************
+* Application: db                                                    *
+* OS encoding: \, Mule encoding: UTF-8                               *
+*                                                                    *
+* Agents Running:                                                    *
+*   Batch module default engine                                      *
+*   DevKit Extension Information                                     *
+*   JMX Agent                                                        *
+*   Wrapper Manager                                                  *
+**********************************************************************
+2019-04-08 22:07:21,710 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Initializing app 'db'                                    +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-08 22:07:21,972 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising RegistryBroker
+2019-04-08 22:07:22,107 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Starting discovery of extensions
+2019-04-08 22:07:22,443 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Discovered 1 extensions
+2019-04-08 22:07:22,444 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Registering extension validation (version 3.9)
+2019-04-08 22:07:22,499 [main] INFO  org.mule.config.spring.MuleArtifactContext - Refreshing org.mule.config.spring.MuleArtifactContext@3591009c: startup date [Mon Apr 08 22:07:22 IST 2019]; root of context hierarchy
+2019-04-08 22:07:23,995 [main] INFO  org.mule.config.spring.processors.NoDevkitInjectorProcessor - JSR-330 'javax.inject.Inject' annotation found and supported for autowiring
+2019-04-08 22:07:24,362 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-08 22:07:24,363 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-08 22:07:24,363 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-08 22:07:24,364 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-08 22:07:25,066 [main] WARN  org.mule.module.ognl.expression.OgnlExpressionEvaluator - OGNL module is deprecated and will be removed in Mule 4.0. Use MEL expressions instead.
+2019-04-08 22:07:25,375 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx2.log
+2019-04-08 22:07:25,387 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx2.log
+2019-04-08 22:07:25,576 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising model: _muleSystemModel
+2019-04-08 22:07:25,580 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Initialising flow: dbFlow
+2019-04-08 22:07:25,581 [main] INFO  org.mule.exception.DefaultMessagingExceptionStrategy - Initialising exception listener: org.mule.exception.DefaultMessagingExceptionStrategy@65bb6275
+2019-04-08 22:07:25,615 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Initialising service: dbFlow.stage1
+2019-04-08 22:07:25,832 [main] INFO  org.mule.config.spring.SpringXmlConfigurationBuilder - Configured Mule using "org.mule.config.spring.SpringXmlConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-08 22:07:25,832 [main] INFO  org.mule.config.builders.AutoConfigurationBuilder - Configured Mule using "org.mule.config.builders.AutoConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-08 22:07:25,836 [main] INFO  com.mulesoft.module.policies.lifecyle.GateKeeper - GateKeeper Mode: DISABLED
+2019-04-08 22:07:25,837 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Starting app 'db'                                        +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-08 22:07:25,839 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Starting ResourceManager
+2019-04-08 22:07:25,839 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Started ResourceManager
+2019-04-08 22:07:25,940 [main] INFO  org.mule.module.http.internal.listener.DefaultHttpListenerConfig - Listening for requests on http://0.0.0.0:8081
+2019-04-08 22:07:25,946 [main] INFO  org.mule.modules.oauth2.provider.agents.DefaultSplashScreenAgent - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ DevKit Extensions (0) used in this application 
+                             +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-08 22:07:25,950 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Starting model: _muleSystemModel
+2019-04-08 22:07:25,959 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Starting flow: dbFlow
+2019-04-08 22:07:25,960 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Starting service: dbFlow.stage1
+2019-04-08 22:07:26,043 [main] INFO  org.mule.module.management.agent.WrapperManagerAgent - This JVM hasn't been launched by the wrapper, the agent will not run.
+2019-04-08 22:07:26,084 [main] INFO  org.mule.DefaultMuleContext - 
+**********************************************************************
+* Application: db                                                    *
+* OS encoding: \, Mule encoding: UTF-8                               *
+*                                                                    *
+* Agents Running:                                                    *
+*   Batch module default engine                                      *
+*   DevKit Extension Information                                     *
+*   JMX Agent                                                        *
+*   Wrapper Manager                                                  *
+**********************************************************************
+2019-04-23 21:27:30,298 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Initializing app 'db'                                    +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 21:27:30,525 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising RegistryBroker
+2019-04-23 21:27:30,672 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Starting discovery of extensions
+2019-04-23 21:27:30,980 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Discovered 1 extensions
+2019-04-23 21:27:30,984 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Registering extension validation (version 3.9)
+2019-04-23 21:27:31,026 [main] INFO  org.mule.config.spring.MuleArtifactContext - Refreshing org.mule.config.spring.MuleArtifactContext@3591009c: startup date [Tue Apr 23 21:27:31 IST 2019]; root of context hierarchy
+2019-04-23 21:27:33,598 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Disposing RegistryBroker
+2019-04-23 21:27:33,607 [main] ERROR org.mule.module.launcher.application.DefaultMuleApplication - null
+org.mule.config.spring.parsers.processors.CheckRequiredAttributes$CheckRequiredAttributesException: Element enricher{name=Message Enricher} must have all attributes for one of the sets: [target].
+	at org.mule.config.spring.parsers.processors.CheckRequiredAttributes.preProcess(CheckRequiredAttributes.java:57) ~[mule-module-spring-config-3.9.1.jar:3.9.1]
+	at org.mule.config.spring.parsers.processors.CheckRequiredAttributesWhenNoChildren.preProcess(CheckRequiredAttributesWhenNoChildren.java:42) ~[mule-module-spring-config-3.9.1.jar:3.9.1]
+	at org.mule.config.spring.parsers.AbstractMuleBeanDefinitionParser.preProcess(AbstractMuleBeanDefinitionParser.java:248) ~[mule-module-spring-config-3.9.1.jar:3.9.1]
+	at org.mule.config.spring.parsers.AbstractHierarchicalDefinitionParser.preProcess(AbstractHierarchicalDefinitionParser.java:101) ~[mule-module-spring-config-3.9.1.jar:3.9.1]
+	at org.mule.config.spring.parsers.generic.ChildDefinitionParser.preProcess(ChildDefinitionParser.java:89) ~[mule-module-spring-config-3.9.1.jar:3.9.1]
+	at org.mule.config.spring.parsers.AbstractMuleBeanDefinitionParser.parseInternal(AbstractMuleBeanDefinitionParser.java:268) ~[mule-module-spring-config-3.9.1.jar:3.9.1]
+	at org.springframework.beans.factory.xml.AbstractBeanDefinitionParser.parse(AbstractBeanDefinitionParser.java:61) ~[spring-beans-4.1.9.RELEASE.jar:4.1.9.RELEASE]
+	at org.springframework.beans.factory.xml.NamespaceHandlerSupport.parse(NamespaceHandlerSupport.java:74) ~[spring-beans-4.1.9.RELEASE.jar:4.1.9.RELEASE]
+	at org.mule.config.spring.MuleHierarchicalBeanDefinitionParserDelegate.parseCustomElement(MuleHierarchicalBeanDefinitionParserDelegate.java:99) ~[mule-module-spring-config-3.9.1.jar:3.9.1]
+	at org.mule.config.spring.MuleHierarchicalBeanDefinitionParserDelegate.parseCustomElement(MuleHierarchicalBeanDefinitionParserDelegate.java:141) ~[mule-module-spring-config-3.9.1.jar:3.9.1]
+	at org.mule.config.spring.MuleHierarchicalBeanDefinitionParserDelegate.parseCustomElement(MuleHierarchicalBeanDefinitionParserDelegate.java:141) ~[mule-module-spring-config-3.9.1.jar:3.9.1]
+	at org.mule.config.spring.MuleHierarchicalBeanDefinitionParserDelegate.parseCustomElement(MuleHierarchicalBeanDefinitionParserDelegate.java:141) ~[mule-module-spring-config-3.9.1.jar:3.9.1]
+	at org.springframework.beans.factory.xml.BeanDefinitionParserDelegate.parseCustomElement(BeanDefinitionParserDelegate.java:1417) ~[spring-beans-4.1.9.RELEASE.jar:4.1.9.RELEASE]
+	at org.springframework.beans.factory.xml.DefaultBeanDefinitionDocumentReader.parseBeanDefinitions(DefaultBeanDefinitionDocumentReader.java:180) ~[spring-beans-4.1.9.RELEASE.jar:4.1.9.RELEASE]
+	at org.mule.config.spring.MuleBeanDefinitionDocumentReader.parseBeanDefinitions(MuleBeanDefinitionDocumentReader.java:56) ~[mule-module-spring-config-3.9.1.jar:3.9.1]
+	at org.springframework.beans.factory.xml.DefaultBeanDefinitionDocumentReader.doRegisterBeanDefinitions(DefaultBeanDefinitionDocumentReader.java:144) ~[spring-beans-4.1.9.RELEASE.jar:4.1.9.RELEASE]
+	at org.springframework.beans.factory.xml.DefaultBeanDefinitionDocumentReader.registerBeanDefinitions(DefaultBeanDefinitionDocumentReader.java:100) ~[spring-beans-4.1.9.RELEASE.jar:4.1.9.RELEASE]
+	at org.springframework.beans.factory.xml.XmlBeanDefinitionReader.registerBeanDefinitions(XmlBeanDefinitionReader.java:510) ~[spring-beans-4.1.9.RELEASE.jar:4.1.9.RELEASE]
+	at org.springframework.beans.factory.xml.XmlBeanDefinitionReader.doLoadBeanDefinitions(XmlBeanDefinitionReader.java:392) ~[spring-beans-4.1.9.RELEASE.jar:4.1.9.RELEASE]
+	at org.springframework.beans.factory.xml.XmlBeanDefinitionReader.loadBeanDefinitions(XmlBeanDefinitionReader.java:336) ~[spring-beans-4.1.9.RELEASE.jar:4.1.9.RELEASE]
+	at org.springframework.beans.factory.xml.XmlBeanDefinitionReader.loadBeanDefinitions(XmlBeanDefinitionReader.java:304) ~[spring-beans-4.1.9.RELEASE.jar:4.1.9.RELEASE]
+	at org.springframework.beans.factory.support.AbstractBeanDefinitionReader.loadBeanDefinitions(AbstractBeanDefinitionReader.java:181) ~[spring-beans-4.1.9.RELEASE.jar:4.1.9.RELEASE]
+	at org.mule.config.spring.MuleArtifactContext.loadBeanDefinitions(MuleArtifactContext.java:192) ~[mule-module-spring-config-3.9.1.jar:3.9.1]
+	at org.springframework.context.support.AbstractRefreshableApplicationContext.refreshBeanFactory(AbstractRefreshableApplicationContext.java:129) ~[spring-context-4.1.9.RELEASE.jar:4.1.9.RELEASE]
+	at org.springframework.context.support.AbstractApplicationContext.obtainFreshBeanFactory(AbstractApplicationContext.java:541) ~[spring-context-4.1.9.RELEASE.jar:4.1.9.RELEASE]
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:452) ~[spring-context-4.1.9.RELEASE.jar:4.1.9.RELEASE]
+	at org.mule.config.spring.SpringRegistry.doInitialise(SpringRegistry.java:108) ~[mule-module-spring-config-3.9.1.jar:3.9.1]
+	at org.mule.registry.AbstractRegistry.initialise(AbstractRegistry.java:104) ~[mule-core-3.9.1.jar:3.9.1]
+	at org.mule.config.spring.SpringXmlConfigurationBuilder.createSpringRegistry(SpringXmlConfigurationBuilder.java:177) ~[mule-module-spring-config-3.9.1.jar:3.9.1]
+	at org.mule.config.spring.SpringXmlConfigurationBuilder.doConfigure(SpringXmlConfigurationBuilder.java:100) ~[mule-module-spring-config-3.9.1.jar:3.9.1]
+	at org.mule.config.builders.AbstractConfigurationBuilder.configure(AbstractConfigurationBuilder.java:43) ~[mule-core-3.9.1.jar:3.9.1]
+	at org.mule.config.builders.AbstractResourceConfigurationBuilder.configure(AbstractResourceConfigurationBuilder.java:69) ~[mule-core-3.9.1.jar:3.9.1]
+	at org.mule.config.builders.AutoConfigurationBuilder.autoConfigure(AutoConfigurationBuilder.java:102) ~[mule-core-3.9.1.jar:3.9.1]
+	at org.mule.config.builders.AutoConfigurationBuilder.doConfigure(AutoConfigurationBuilder.java:54) ~[mule-core-3.9.1.jar:3.9.1]
+	at org.mule.config.builders.AbstractConfigurationBuilder.configure(AbstractConfigurationBuilder.java:43) ~[mule-core-3.9.1.jar:3.9.1]
+	at org.mule.config.builders.AbstractResourceConfigurationBuilder.configure(AbstractResourceConfigurationBuilder.java:69) ~[mule-core-3.9.1.jar:3.9.1]
+	at org.mule.context.DefaultMuleContextFactory$1.configure(DefaultMuleContextFactory.java:89) ~[mule-core-3.9.1.jar:3.9.1]
+	at org.mule.context.DefaultMuleContextFactory.doCreateMuleContext(DefaultMuleContextFactory.java:222) ~[mule-core-3.9.1.jar:3.9.1]
+	at org.mule.context.DefaultMuleContextFactory.createMuleContext(DefaultMuleContextFactory.java:81) ~[mule-core-3.9.1.jar:3.9.1]
+	at org.mule.module.launcher.application.DefaultMuleApplication.init(DefaultMuleApplication.java:210) ~[mule-module-launcher-3.9.1.jar:3.9.1]
+	at org.mule.module.launcher.artifact.ArtifactWrapper$2.execute(ArtifactWrapper.java:64) ~[mule-module-launcher-3.9.1.jar:3.9.1]
+	at org.mule.module.launcher.artifact.ArtifactWrapper.executeWithinArtifactClassLoader(ArtifactWrapper.java:137) ~[mule-module-launcher-3.9.1.jar:3.9.1]
+	at org.mule.module.launcher.artifact.ArtifactWrapper.init(ArtifactWrapper.java:59) ~[mule-module-launcher-3.9.1.jar:3.9.1]
+	at org.mule.module.launcher.DefaultArtifactDeployer.deploy(DefaultArtifactDeployer.java:72) ~[mule-module-launcher-3.9.1.jar:3.9.1]
+	at org.mule.module.launcher.DefaultArchiveDeployer.deployArtifact(DefaultArchiveDeployer.java:547) ~[mule-module-launcher-3.9.1.jar:3.9.1]
+	at org.mule.module.launcher.DefaultArchiveDeployer.deployArtifact(DefaultArchiveDeployer.java:325) ~[mule-module-launcher-3.9.1.jar:3.9.1]
+	at org.mule.module.launcher.DefaultArchiveDeployer.deployPackagedArtifact(DefaultArchiveDeployer.java:185) ~[mule-module-launcher-3.9.1.jar:3.9.1]
+	at org.mule.module.launcher.DefaultArchiveDeployer.deployPackagedArtifact(DefaultArchiveDeployer.java:274) ~[mule-module-launcher-3.9.1.jar:3.9.1]
+	at org.mule.module.launcher.DefaultArchiveDeployer.deployPackagedArtifact(DefaultArchiveDeployer.java:80) ~[mule-module-launcher-3.9.1.jar:3.9.1]
+	at org.mule.module.launcher.DefaultArchiveDeployer.deployPackagedArtifact(DefaultArchiveDeployer.java:577) ~[mule-module-launcher-3.9.1.jar:3.9.1]
+	at org.mule.module.launcher.DeploymentDirectoryWatcher.deployPackedApps(DeploymentDirectoryWatcher.java:283) ~[mule-module-launcher-3.9.1.jar:3.9.1]
+	at org.mule.module.launcher.DeploymentDirectoryWatcher.start(DeploymentDirectoryWatcher.java:155) ~[mule-module-launcher-3.9.1.jar:3.9.1]
+	at org.mule.module.launcher.MuleDeploymentService.start(MuleDeploymentService.java:135) ~[mule-module-launcher-3.9.1.jar:3.9.1]
+	at org.mule.module.launcher.MuleContainer.start(MuleContainer.java:172) ~[mule-module-launcher-3.9.1.jar:3.9.1]
+	at org.mule.tooling.server.application.ApplicationDeployer.main(ApplicationDeployer.java:15) ~[tooling-support-3.9.1.jar:?]
+2019-04-23 21:27:33,611 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - App 'db' never started, nothing to dispose of
+2019-04-23 22:00:47,920 [Mule.app.deployer.monitor.1.thread.1] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Initializing app 'db'                                    +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:00:47,936 [Mule.app.deployer.monitor.1.thread.1] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising RegistryBroker
+2019-04-23 22:00:47,936 [Mule.app.deployer.monitor.1.thread.1] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Starting discovery of extensions
+2019-04-23 22:00:47,967 [Mule.app.deployer.monitor.1.thread.1] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Discovered 1 extensions
+2019-04-23 22:00:47,967 [Mule.app.deployer.monitor.1.thread.1] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Registering extension validation (version 3.9)
+2019-04-23 22:00:47,967 [Mule.app.deployer.monitor.1.thread.1] INFO  org.mule.config.spring.MuleArtifactContext - Refreshing org.mule.config.spring.MuleArtifactContext@733772a: startup date [Tue Apr 23 22:00:47 IST 2019]; root of context hierarchy
+2019-04-23 22:00:49,201 [Mule.app.deployer.monitor.1.thread.1] INFO  org.mule.config.spring.processors.NoDevkitInjectorProcessor - JSR-330 'javax.inject.Inject' annotation found and supported for autowiring
+2019-04-23 22:00:49,561 [Mule.app.deployer.monitor.1.thread.1] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:00:49,561 [Mule.app.deployer.monitor.1.thread.1] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:00:49,561 [Mule.app.deployer.monitor.1.thread.1] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:00:49,561 [Mule.app.deployer.monitor.1.thread.1] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:00:50,249 [Mule.app.deployer.monitor.1.thread.1] WARN  org.mule.module.ognl.expression.OgnlExpressionEvaluator - OGNL module is deprecated and will be removed in Mule 4.0. Use MEL expressions instead.
+2019-04-23 22:00:50,682 [Mule.app.deployer.monitor.1.thread.1] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx2.log
+2019-04-23 22:00:50,682 [Mule.app.deployer.monitor.1.thread.1] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx2.log
+2019-04-23 22:00:50,760 [Mule.app.deployer.monitor.1.thread.1] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising model: _muleSystemModel
+2019-04-23 22:00:50,760 [Mule.app.deployer.monitor.1.thread.1] INFO  org.mule.construct.FlowConstructLifecycleManager - Initialising flow: dbFlow
+2019-04-23 22:00:50,760 [Mule.app.deployer.monitor.1.thread.1] INFO  org.mule.exception.DefaultMessagingExceptionStrategy - Initialising exception listener: org.mule.exception.DefaultMessagingExceptionStrategy@5bbff6a2
+2019-04-23 22:00:50,791 [Mule.app.deployer.monitor.1.thread.1] INFO  org.mule.processor.SedaStageLifecycleManager - Initialising service: dbFlow.stage1
+2019-04-23 22:00:50,979 [Mule.app.deployer.monitor.1.thread.1] INFO  org.mule.config.spring.SpringXmlConfigurationBuilder - Configured Mule using "org.mule.config.spring.SpringXmlConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-23 22:00:50,979 [Mule.app.deployer.monitor.1.thread.1] INFO  org.mule.config.builders.AutoConfigurationBuilder - Configured Mule using "org.mule.config.builders.AutoConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-23 22:00:50,979 [Mule.app.deployer.monitor.1.thread.1] INFO  com.mulesoft.module.policies.lifecyle.GateKeeper - GateKeeper Mode: DISABLED
+2019-04-23 22:00:50,979 [Mule.app.deployer.monitor.1.thread.1] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Starting app 'db'                                        +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:00:50,979 [Mule.app.deployer.monitor.1.thread.1] INFO  org.mule.util.queue.QueueXaResourceManager - Starting ResourceManager
+2019-04-23 22:00:50,979 [Mule.app.deployer.monitor.1.thread.1] INFO  org.mule.util.queue.QueueXaResourceManager - Started ResourceManager
+2019-04-23 22:00:51,025 [Mule.app.deployer.monitor.1.thread.1] INFO  org.mule.module.http.internal.listener.DefaultHttpListenerConfig - Listening for requests on http://0.0.0.0:8081
+2019-04-23 22:00:51,025 [Mule.app.deployer.monitor.1.thread.1] INFO  org.mule.modules.oauth2.provider.agents.DefaultSplashScreenAgent - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ DevKit Extensions (0) used in this application 
+                             +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:00:51,025 [Mule.app.deployer.monitor.1.thread.1] INFO  org.mule.lifecycle.AbstractLifecycleManager - Starting model: _muleSystemModel
+2019-04-23 22:00:51,025 [Mule.app.deployer.monitor.1.thread.1] INFO  org.mule.construct.FlowConstructLifecycleManager - Starting flow: dbFlow
+2019-04-23 22:00:51,025 [Mule.app.deployer.monitor.1.thread.1] INFO  org.mule.processor.SedaStageLifecycleManager - Starting service: dbFlow.stage1
+2019-04-23 22:00:51,072 [Mule.app.deployer.monitor.1.thread.1] INFO  org.mule.module.management.agent.WrapperManagerAgent - This JVM hasn't been launched by the wrapper, the agent will not run.
+2019-04-23 22:00:51,088 [Mule.app.deployer.monitor.1.thread.1] INFO  org.mule.DefaultMuleContext - 
+**********************************************************************
+* Application: db                                                    *
+* OS encoding: \, Mule encoding: UTF-8                               *
+*                                                                    *
+* Agents Running:                                                    *
+*   Batch module default engine                                      *
+*   DevKit Extension Information                                     *
+*   JMX Agent                                                        *
+*   Wrapper Manager                                                  *
+**********************************************************************
+2019-04-23 22:01:30,193 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Initializing app 'db'                                    +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:01:30,411 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising RegistryBroker
+2019-04-23 22:01:30,499 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Starting discovery of extensions
+2019-04-23 22:01:30,814 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Discovered 1 extensions
+2019-04-23 22:01:30,814 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Registering extension validation (version 3.9)
+2019-04-23 22:01:30,861 [main] INFO  org.mule.config.spring.MuleArtifactContext - Refreshing org.mule.config.spring.MuleArtifactContext@3591009c: startup date [Tue Apr 23 22:01:30 IST 2019]; root of context hierarchy
+2019-04-23 22:01:32,332 [main] INFO  org.mule.config.spring.processors.NoDevkitInjectorProcessor - JSR-330 'javax.inject.Inject' annotation found and supported for autowiring
+2019-04-23 22:01:32,649 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:01:32,649 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:01:32,649 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:01:32,649 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:01:33,259 [main] WARN  org.mule.module.ognl.expression.OgnlExpressionEvaluator - OGNL module is deprecated and will be removed in Mule 4.0. Use MEL expressions instead.
+2019-04-23 22:01:33,509 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx2.log
+2019-04-23 22:01:33,527 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx2.log
+2019-04-23 22:01:33,714 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising model: _muleSystemModel
+2019-04-23 22:01:33,714 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Initialising flow: dbFlow
+2019-04-23 22:01:33,714 [main] INFO  org.mule.exception.DefaultMessagingExceptionStrategy - Initialising exception listener: org.mule.exception.DefaultMessagingExceptionStrategy@49fb0bbd
+2019-04-23 22:01:33,745 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Initialising service: dbFlow.stage1
+2019-04-23 22:01:33,948 [main] INFO  org.mule.config.spring.SpringXmlConfigurationBuilder - Configured Mule using "org.mule.config.spring.SpringXmlConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-23 22:01:33,948 [main] INFO  org.mule.config.builders.AutoConfigurationBuilder - Configured Mule using "org.mule.config.builders.AutoConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-23 22:01:33,948 [main] INFO  com.mulesoft.module.policies.lifecyle.GateKeeper - GateKeeper Mode: DISABLED
+2019-04-23 22:01:33,948 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Starting app 'db'                                        +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:01:33,948 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Starting ResourceManager
+2019-04-23 22:01:33,948 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Started ResourceManager
+2019-04-23 22:01:33,995 [main] INFO  org.mule.module.http.internal.listener.DefaultHttpListenerConfig - Listening for requests on http://0.0.0.0:8081
+2019-04-23 22:01:33,995 [main] INFO  org.mule.modules.oauth2.provider.agents.DefaultSplashScreenAgent - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ DevKit Extensions (0) used in this application 
+                             +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:01:33,995 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Starting model: _muleSystemModel
+2019-04-23 22:01:33,995 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Starting flow: dbFlow
+2019-04-23 22:01:33,995 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Starting service: dbFlow.stage1
+2019-04-23 22:01:34,042 [main] INFO  org.mule.module.management.agent.WrapperManagerAgent - This JVM hasn't been launched by the wrapper, the agent will not run.
+2019-04-23 22:01:34,058 [main] INFO  org.mule.DefaultMuleContext - 
+**********************************************************************
+* Application: db                                                    *
+* OS encoding: \, Mule encoding: UTF-8                               *
+*                                                                    *
+* Agents Running:                                                    *
+*   Batch module default engine                                      *
+*   DevKit Extension Information                                     *
+*   JMX Agent                                                        *
+*   Wrapper Manager                                                  *
+**********************************************************************
+2019-04-23 22:15:36,815 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Initializing app 'db'                                    +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:15:37,095 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising RegistryBroker
+2019-04-23 22:15:37,216 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Starting discovery of extensions
+2019-04-23 22:15:37,504 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Discovered 1 extensions
+2019-04-23 22:15:37,504 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Registering extension validation (version 3.9)
+2019-04-23 22:15:37,551 [main] INFO  org.mule.config.spring.MuleArtifactContext - Refreshing org.mule.config.spring.MuleArtifactContext@3591009c: startup date [Tue Apr 23 22:15:37 IST 2019]; root of context hierarchy
+2019-04-23 22:15:38,970 [main] INFO  org.mule.config.spring.processors.NoDevkitInjectorProcessor - JSR-330 'javax.inject.Inject' annotation found and supported for autowiring
+2019-04-23 22:15:39,321 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:15:39,321 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:15:39,321 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:15:39,322 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:15:40,010 [main] WARN  org.mule.module.ognl.expression.OgnlExpressionEvaluator - OGNL module is deprecated and will be removed in Mule 4.0. Use MEL expressions instead.
+2019-04-23 22:15:40,266 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx2.log
+2019-04-23 22:15:40,278 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx2.log
+2019-04-23 22:15:40,531 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising model: _muleSystemModel
+2019-04-23 22:15:40,535 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Initialising flow: dbFlow
+2019-04-23 22:15:40,535 [main] INFO  org.mule.exception.DefaultMessagingExceptionStrategy - Initialising exception listener: org.mule.exception.DefaultMessagingExceptionStrategy@49fb0bbd
+2019-04-23 22:15:40,567 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Initialising service: dbFlow.stage1
+2019-04-23 22:15:40,805 [main] INFO  org.mule.config.spring.SpringXmlConfigurationBuilder - Configured Mule using "org.mule.config.spring.SpringXmlConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-23 22:15:40,805 [main] INFO  org.mule.config.builders.AutoConfigurationBuilder - Configured Mule using "org.mule.config.builders.AutoConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-23 22:15:40,812 [main] INFO  com.mulesoft.module.policies.lifecyle.GateKeeper - GateKeeper Mode: DISABLED
+2019-04-23 22:15:40,813 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Starting app 'db'                                        +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:15:40,815 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Starting ResourceManager
+2019-04-23 22:15:40,816 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Started ResourceManager
+2019-04-23 22:15:40,856 [main] INFO  org.mule.module.http.internal.listener.DefaultHttpListenerConfig - Listening for requests on http://0.0.0.0:8081
+2019-04-23 22:15:40,859 [main] INFO  org.mule.modules.oauth2.provider.agents.DefaultSplashScreenAgent - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ DevKit Extensions (0) used in this application 
+                             +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:15:40,862 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Starting model: _muleSystemModel
+2019-04-23 22:15:40,863 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Starting flow: dbFlow
+2019-04-23 22:15:40,864 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Starting service: dbFlow.stage1
+2019-04-23 22:15:40,899 [main] INFO  org.mule.module.management.agent.WrapperManagerAgent - This JVM hasn't been launched by the wrapper, the agent will not run.
+2019-04-23 22:15:40,919 [main] INFO  org.mule.DefaultMuleContext - 
+**********************************************************************
+* Application: db                                                    *
+* OS encoding: \, Mule encoding: UTF-8                               *
+*                                                                    *
+* Agents Running:                                                    *
+*   Batch module default engine                                      *
+*   DevKit Extension Information                                     *
+*   JMX Agent                                                        *
+*   Wrapper Manager                                                  *
+**********************************************************************
+2019-04-23 22:18:52,770 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Initializing app 'db'                                    +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:18:53,019 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising RegistryBroker
+2019-04-23 22:18:53,178 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Starting discovery of extensions
+2019-04-23 22:18:53,485 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Discovered 1 extensions
+2019-04-23 22:18:53,485 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Registering extension validation (version 3.9)
+2019-04-23 22:18:53,533 [main] INFO  org.mule.config.spring.MuleArtifactContext - Refreshing org.mule.config.spring.MuleArtifactContext@3591009c: startup date [Tue Apr 23 22:18:53 IST 2019]; root of context hierarchy
+2019-04-23 22:18:55,287 [main] INFO  org.mule.config.spring.processors.NoDevkitInjectorProcessor - JSR-330 'javax.inject.Inject' annotation found and supported for autowiring
+2019-04-23 22:18:55,714 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:18:55,714 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:18:55,714 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:18:55,714 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:18:56,639 [main] WARN  org.mule.module.ognl.expression.OgnlExpressionEvaluator - OGNL module is deprecated and will be removed in Mule 4.0. Use MEL expressions instead.
+2019-04-23 22:18:56,956 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx2.log
+2019-04-23 22:18:56,969 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx2.log
+2019-04-23 22:18:57,232 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising model: _muleSystemModel
+2019-04-23 22:18:57,239 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Initialising flow: dbFlow
+2019-04-23 22:18:57,239 [main] INFO  org.mule.exception.DefaultMessagingExceptionStrategy - Initialising exception listener: org.mule.exception.DefaultMessagingExceptionStrategy@48a2db72
+2019-04-23 22:18:57,279 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Initialising service: dbFlow.stage1
+2019-04-23 22:18:57,539 [main] INFO  org.mule.config.spring.SpringXmlConfigurationBuilder - Configured Mule using "org.mule.config.spring.SpringXmlConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-23 22:18:57,540 [main] INFO  org.mule.config.builders.AutoConfigurationBuilder - Configured Mule using "org.mule.config.builders.AutoConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-23 22:18:57,546 [main] INFO  com.mulesoft.module.policies.lifecyle.GateKeeper - GateKeeper Mode: DISABLED
+2019-04-23 22:18:57,547 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Starting app 'db'                                        +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:18:57,551 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Starting ResourceManager
+2019-04-23 22:18:57,551 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Started ResourceManager
+2019-04-23 22:18:57,599 [main] INFO  org.mule.module.http.internal.listener.DefaultHttpListenerConfig - Listening for requests on http://0.0.0.0:8081
+2019-04-23 22:18:57,603 [main] INFO  org.mule.modules.oauth2.provider.agents.DefaultSplashScreenAgent - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ DevKit Extensions (0) used in this application 
+                             +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:18:57,605 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Starting model: _muleSystemModel
+2019-04-23 22:18:57,606 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Starting flow: dbFlow
+2019-04-23 22:18:57,607 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Starting service: dbFlow.stage1
+2019-04-23 22:18:57,665 [main] INFO  org.mule.module.management.agent.WrapperManagerAgent - This JVM hasn't been launched by the wrapper, the agent will not run.
+2019-04-23 22:18:57,690 [main] INFO  org.mule.DefaultMuleContext - 
+**********************************************************************
+* Application: db                                                    *
+* OS encoding: \, Mule encoding: UTF-8                               *
+*                                                                    *
+* Agents Running:                                                    *
+*   Batch module default engine                                      *
+*   DevKit Extension Information                                     *
+*   JMX Agent                                                        *
+*   Wrapper Manager                                                  *
+**********************************************************************
+2019-04-23 22:21:44,740 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Initializing app 'db'                                    +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:21:44,994 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising RegistryBroker
+2019-04-23 22:21:45,155 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Starting discovery of extensions
+2019-04-23 22:21:45,482 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Discovered 1 extensions
+2019-04-23 22:21:45,482 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Registering extension validation (version 3.9)
+2019-04-23 22:21:45,554 [main] INFO  org.mule.config.spring.MuleArtifactContext - Refreshing org.mule.config.spring.MuleArtifactContext@3591009c: startup date [Tue Apr 23 22:21:45 IST 2019]; root of context hierarchy
+2019-04-23 22:21:47,174 [main] INFO  org.mule.config.spring.processors.NoDevkitInjectorProcessor - JSR-330 'javax.inject.Inject' annotation found and supported for autowiring
+2019-04-23 22:21:47,626 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:21:47,626 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:21:47,626 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:21:47,626 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:21:48,472 [main] WARN  org.mule.module.ognl.expression.OgnlExpressionEvaluator - OGNL module is deprecated and will be removed in Mule 4.0. Use MEL expressions instead.
+2019-04-23 22:21:48,770 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx2.log
+2019-04-23 22:21:48,783 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx2.log
+2019-04-23 22:21:48,989 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising model: _muleSystemModel
+2019-04-23 22:21:48,993 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Initialising flow: dbFlow
+2019-04-23 22:21:48,993 [main] INFO  org.mule.exception.DefaultMessagingExceptionStrategy - Initialising exception listener: org.mule.exception.DefaultMessagingExceptionStrategy@48a2db72
+2019-04-23 22:21:49,023 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Initialising service: dbFlow.stage1
+2019-04-23 22:21:49,261 [main] INFO  org.mule.config.spring.SpringXmlConfigurationBuilder - Configured Mule using "org.mule.config.spring.SpringXmlConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-23 22:21:49,261 [main] INFO  org.mule.config.builders.AutoConfigurationBuilder - Configured Mule using "org.mule.config.builders.AutoConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-23 22:21:49,266 [main] INFO  com.mulesoft.module.policies.lifecyle.GateKeeper - GateKeeper Mode: DISABLED
+2019-04-23 22:21:49,267 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Starting app 'db'                                        +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:21:49,269 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Starting ResourceManager
+2019-04-23 22:21:49,269 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Started ResourceManager
+2019-04-23 22:21:49,351 [main] INFO  org.mule.module.http.internal.listener.DefaultHttpListenerConfig - Listening for requests on http://0.0.0.0:8081
+2019-04-23 22:21:49,353 [main] INFO  org.mule.modules.oauth2.provider.agents.DefaultSplashScreenAgent - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ DevKit Extensions (0) used in this application 
+                             +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:21:49,356 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Starting model: _muleSystemModel
+2019-04-23 22:21:49,357 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Starting flow: dbFlow
+2019-04-23 22:21:49,358 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Starting service: dbFlow.stage1
+2019-04-23 22:21:49,406 [main] INFO  org.mule.module.management.agent.WrapperManagerAgent - This JVM hasn't been launched by the wrapper, the agent will not run.
+2019-04-23 22:21:49,425 [main] INFO  org.mule.DefaultMuleContext - 
+**********************************************************************
+* Application: db                                                    *
+* OS encoding: \, Mule encoding: UTF-8                               *
+*                                                                    *
+* Agents Running:                                                    *
+*   Batch module default engine                                      *
+*   DevKit Extension Information                                     *
+*   JMX Agent                                                        *
+*   Wrapper Manager                                                  *
+**********************************************************************
+2019-04-23 22:22:32,717 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Initializing app 'db'                                    +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:22:32,977 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising RegistryBroker
+2019-04-23 22:22:33,137 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Starting discovery of extensions
+2019-04-23 22:22:33,431 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Discovered 1 extensions
+2019-04-23 22:22:33,431 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Registering extension validation (version 3.9)
+2019-04-23 22:22:33,504 [main] INFO  org.mule.config.spring.MuleArtifactContext - Refreshing org.mule.config.spring.MuleArtifactContext@3591009c: startup date [Tue Apr 23 22:22:33 IST 2019]; root of context hierarchy
+2019-04-23 22:22:34,979 [main] INFO  org.mule.config.spring.processors.NoDevkitInjectorProcessor - JSR-330 'javax.inject.Inject' annotation found and supported for autowiring
+2019-04-23 22:22:35,355 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:22:35,355 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:22:35,355 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:22:35,355 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:22:36,129 [main] WARN  org.mule.module.ognl.expression.OgnlExpressionEvaluator - OGNL module is deprecated and will be removed in Mule 4.0. Use MEL expressions instead.
+2019-04-23 22:22:36,444 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx2.log
+2019-04-23 22:22:36,457 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx2.log
+2019-04-23 22:22:36,637 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising model: _muleSystemModel
+2019-04-23 22:22:36,644 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Initialising flow: dbFlow
+2019-04-23 22:22:36,644 [main] INFO  org.mule.exception.DefaultMessagingExceptionStrategy - Initialising exception listener: org.mule.exception.DefaultMessagingExceptionStrategy@4faf104
+2019-04-23 22:22:36,674 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Initialising service: dbFlow.stage1
+2019-04-23 22:22:36,897 [main] INFO  org.mule.config.spring.SpringXmlConfigurationBuilder - Configured Mule using "org.mule.config.spring.SpringXmlConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-23 22:22:36,897 [main] INFO  org.mule.config.builders.AutoConfigurationBuilder - Configured Mule using "org.mule.config.builders.AutoConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-23 22:22:36,902 [main] INFO  com.mulesoft.module.policies.lifecyle.GateKeeper - GateKeeper Mode: DISABLED
+2019-04-23 22:22:36,903 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Starting app 'db'                                        +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:22:36,905 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Starting ResourceManager
+2019-04-23 22:22:36,905 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Started ResourceManager
+2019-04-23 22:22:36,950 [main] INFO  org.mule.module.http.internal.listener.DefaultHttpListenerConfig - Listening for requests on http://0.0.0.0:8081
+2019-04-23 22:22:36,952 [main] INFO  org.mule.modules.oauth2.provider.agents.DefaultSplashScreenAgent - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ DevKit Extensions (0) used in this application 
+                             +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:22:36,954 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Starting model: _muleSystemModel
+2019-04-23 22:22:36,956 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Starting flow: dbFlow
+2019-04-23 22:22:36,956 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Starting service: dbFlow.stage1
+2019-04-23 22:22:37,000 [main] INFO  org.mule.module.management.agent.WrapperManagerAgent - This JVM hasn't been launched by the wrapper, the agent will not run.
+2019-04-23 22:22:37,022 [main] INFO  org.mule.DefaultMuleContext - 
+**********************************************************************
+* Application: db                                                    *
+* OS encoding: \, Mule encoding: UTF-8                               *
+*                                                                    *
+* Agents Running:                                                    *
+*   Batch module default engine                                      *
+*   DevKit Extension Information                                     *
+*   JMX Agent                                                        *
+*   Wrapper Manager                                                  *
+**********************************************************************
+2019-04-23 22:24:40,988 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Initializing app 'db'                                    +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:24:41,222 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising RegistryBroker
+2019-04-23 22:24:41,345 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Starting discovery of extensions
+2019-04-23 22:24:41,662 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Discovered 1 extensions
+2019-04-23 22:24:41,662 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Registering extension validation (version 3.9)
+2019-04-23 22:24:41,712 [main] INFO  org.mule.config.spring.MuleArtifactContext - Refreshing org.mule.config.spring.MuleArtifactContext@3591009c: startup date [Tue Apr 23 22:24:41 IST 2019]; root of context hierarchy
+2019-04-23 22:24:43,366 [main] INFO  org.mule.config.spring.processors.NoDevkitInjectorProcessor - JSR-330 'javax.inject.Inject' annotation found and supported for autowiring
+2019-04-23 22:24:43,753 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:24:43,753 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:24:43,753 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:24:43,753 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:24:44,725 [main] WARN  org.mule.module.ognl.expression.OgnlExpressionEvaluator - OGNL module is deprecated and will be removed in Mule 4.0. Use MEL expressions instead.
+2019-04-23 22:24:45,189 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx2.log
+2019-04-23 22:24:45,208 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx2.log
+2019-04-23 22:24:45,464 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising model: _muleSystemModel
+2019-04-23 22:24:45,468 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Initialising flow: dbFlow
+2019-04-23 22:24:45,468 [main] INFO  org.mule.exception.DefaultMessagingExceptionStrategy - Initialising exception listener: org.mule.exception.DefaultMessagingExceptionStrategy@49fb0bbd
+2019-04-23 22:24:45,504 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Initialising service: dbFlow.stage1
+2019-04-23 22:24:45,748 [main] INFO  org.mule.config.spring.SpringXmlConfigurationBuilder - Configured Mule using "org.mule.config.spring.SpringXmlConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-23 22:24:45,748 [main] INFO  org.mule.config.builders.AutoConfigurationBuilder - Configured Mule using "org.mule.config.builders.AutoConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-23 22:24:45,754 [main] INFO  com.mulesoft.module.policies.lifecyle.GateKeeper - GateKeeper Mode: DISABLED
+2019-04-23 22:24:45,755 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Starting app 'db'                                        +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:24:45,761 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Starting ResourceManager
+2019-04-23 22:24:45,761 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Started ResourceManager
+2019-04-23 22:24:45,807 [main] INFO  org.mule.module.http.internal.listener.DefaultHttpListenerConfig - Listening for requests on http://0.0.0.0:8081
+2019-04-23 22:24:45,810 [main] INFO  org.mule.modules.oauth2.provider.agents.DefaultSplashScreenAgent - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ DevKit Extensions (0) used in this application 
+                             +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:24:45,813 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Starting model: _muleSystemModel
+2019-04-23 22:24:45,814 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Starting flow: dbFlow
+2019-04-23 22:24:45,815 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Starting service: dbFlow.stage1
+2019-04-23 22:24:45,862 [main] INFO  org.mule.module.management.agent.WrapperManagerAgent - This JVM hasn't been launched by the wrapper, the agent will not run.
+2019-04-23 22:24:45,881 [main] INFO  org.mule.DefaultMuleContext - 
+**********************************************************************
+* Application: db                                                    *
+* OS encoding: \, Mule encoding: UTF-8                               *
+*                                                                    *
+* Agents Running:                                                    *
+*   Batch module default engine                                      *
+*   DevKit Extension Information                                     *
+*   JMX Agent                                                        *
+*   Wrapper Manager                                                  *
+**********************************************************************
+2019-04-23 22:25:45,914 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Initializing app 'db'                                    +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:25:46,386 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising RegistryBroker
+2019-04-23 22:25:46,684 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Starting discovery of extensions
+2019-04-23 22:25:47,059 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Discovered 1 extensions
+2019-04-23 22:25:47,059 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Registering extension validation (version 3.9)
+2019-04-23 22:25:47,117 [main] INFO  org.mule.config.spring.MuleArtifactContext - Refreshing org.mule.config.spring.MuleArtifactContext@7e736350: startup date [Tue Apr 23 22:25:47 IST 2019]; root of context hierarchy
+2019-04-23 22:25:49,101 [main] INFO  org.mule.config.spring.processors.NoDevkitInjectorProcessor - JSR-330 'javax.inject.Inject' annotation found and supported for autowiring
+2019-04-23 22:25:49,575 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:25:49,575 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:25:49,576 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:25:49,576 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:25:50,486 [main] WARN  org.mule.module.ognl.expression.OgnlExpressionEvaluator - OGNL module is deprecated and will be removed in Mule 4.0. Use MEL expressions instead.
+2019-04-23 22:25:50,921 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx2.log
+2019-04-23 22:25:50,933 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx2.log
+2019-04-23 22:25:51,059 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising model: _muleSystemModel
+2019-04-23 22:25:51,063 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Initialising flow: dbFlow
+2019-04-23 22:25:51,063 [main] INFO  org.mule.exception.DefaultMessagingExceptionStrategy - Initialising exception listener: org.mule.exception.DefaultMessagingExceptionStrategy@afee63
+2019-04-23 22:25:51,100 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Initialising service: dbFlow.stage1
+2019-04-23 22:25:51,318 [main] INFO  org.mule.config.spring.SpringXmlConfigurationBuilder - Configured Mule using "org.mule.config.spring.SpringXmlConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-23 22:25:51,319 [main] INFO  org.mule.config.builders.AutoConfigurationBuilder - Configured Mule using "org.mule.config.builders.AutoConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-23 22:25:51,325 [main] INFO  com.mulesoft.module.policies.lifecyle.GateKeeper - GateKeeper Mode: DISABLED
+2019-04-23 22:25:51,326 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Starting app 'db'                                        +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:25:51,328 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Starting ResourceManager
+2019-04-23 22:25:51,328 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Started ResourceManager
+2019-04-23 22:25:51,382 [main] INFO  org.mule.module.http.internal.listener.DefaultHttpListenerConfig - Listening for requests on http://0.0.0.0:8081
+2019-04-23 22:25:51,385 [main] INFO  org.mule.modules.oauth2.provider.agents.DefaultSplashScreenAgent - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ DevKit Extensions (0) used in this application 
+                             +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:25:51,387 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Starting model: _muleSystemModel
+2019-04-23 22:25:51,389 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Starting flow: dbFlow
+2019-04-23 22:25:51,390 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Starting service: dbFlow.stage1
+2019-04-23 22:25:51,438 [main] INFO  org.mule.module.management.agent.WrapperManagerAgent - This JVM hasn't been launched by the wrapper, the agent will not run.
+2019-04-23 22:25:51,459 [main] INFO  org.mule.DefaultMuleContext - 
+**********************************************************************
+* Application: db                                                    *
+* OS encoding: \, Mule encoding: UTF-8                               *
+*                                                                    *
+* Agents Running:                                                    *
+*   Batch module default engine                                      *
+*   DevKit Extension Information                                     *
+*   JMX Agent                                                        *
+*   Wrapper Manager                                                  *
+**********************************************************************
+2019-04-23 22:28:08,908 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Initializing app 'db'                                    +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:28:09,250 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising RegistryBroker
+2019-04-23 22:28:09,442 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Starting discovery of extensions
+2019-04-23 22:28:09,860 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Discovered 1 extensions
+2019-04-23 22:28:09,860 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Registering extension validation (version 3.9)
+2019-04-23 22:28:09,927 [main] INFO  org.mule.config.spring.MuleArtifactContext - Refreshing org.mule.config.spring.MuleArtifactContext@3591009c: startup date [Tue Apr 23 22:28:09 IST 2019]; root of context hierarchy
+2019-04-23 22:28:11,427 [main] INFO  org.mule.config.spring.processors.NoDevkitInjectorProcessor - JSR-330 'javax.inject.Inject' annotation found and supported for autowiring
+2019-04-23 22:28:11,781 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:28:11,781 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:28:11,781 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:28:11,781 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:28:12,542 [main] WARN  org.mule.module.ognl.expression.OgnlExpressionEvaluator - OGNL module is deprecated and will be removed in Mule 4.0. Use MEL expressions instead.
+2019-04-23 22:28:13,156 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx2.log
+2019-04-23 22:28:13,169 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx2.log
+2019-04-23 22:28:13,369 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising model: _muleSystemModel
+2019-04-23 22:28:13,373 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Initialising flow: dbFlow
+2019-04-23 22:28:13,373 [main] INFO  org.mule.exception.DefaultMessagingExceptionStrategy - Initialising exception listener: org.mule.exception.DefaultMessagingExceptionStrategy@4faf104
+2019-04-23 22:28:13,407 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Initialising service: dbFlow.stage1
+2019-04-23 22:28:13,659 [main] INFO  org.mule.config.spring.SpringXmlConfigurationBuilder - Configured Mule using "org.mule.config.spring.SpringXmlConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-23 22:28:13,659 [main] INFO  org.mule.config.builders.AutoConfigurationBuilder - Configured Mule using "org.mule.config.builders.AutoConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-23 22:28:13,665 [main] INFO  com.mulesoft.module.policies.lifecyle.GateKeeper - GateKeeper Mode: DISABLED
+2019-04-23 22:28:13,666 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Starting app 'db'                                        +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:28:13,669 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Starting ResourceManager
+2019-04-23 22:28:13,669 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Started ResourceManager
+2019-04-23 22:28:13,713 [main] INFO  org.mule.module.http.internal.listener.DefaultHttpListenerConfig - Listening for requests on http://0.0.0.0:8081
+2019-04-23 22:28:13,717 [main] INFO  org.mule.modules.oauth2.provider.agents.DefaultSplashScreenAgent - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ DevKit Extensions (0) used in this application 
+                             +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:28:13,722 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Starting model: _muleSystemModel
+2019-04-23 22:28:13,724 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Starting flow: dbFlow
+2019-04-23 22:28:13,725 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Starting service: dbFlow.stage1
+2019-04-23 22:28:13,770 [main] INFO  org.mule.module.management.agent.WrapperManagerAgent - This JVM hasn't been launched by the wrapper, the agent will not run.
+2019-04-23 22:28:13,794 [main] INFO  org.mule.DefaultMuleContext - 
+**********************************************************************
+* Application: db                                                    *
+* OS encoding: \, Mule encoding: UTF-8                               *
+*                                                                    *
+* Agents Running:                                                    *
+*   Batch module default engine                                      *
+*   DevKit Extension Information                                     *
+*   JMX Agent                                                        *
+*   Wrapper Manager                                                  *
+**********************************************************************
+2019-04-23 22:30:20,291 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Initializing app 'db'                                    +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:30:20,535 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising RegistryBroker
+2019-04-23 22:30:20,729 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Starting discovery of extensions
+2019-04-23 22:30:21,111 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Discovered 1 extensions
+2019-04-23 22:30:21,111 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Registering extension validation (version 3.9)
+2019-04-23 22:30:21,171 [main] INFO  org.mule.config.spring.MuleArtifactContext - Refreshing org.mule.config.spring.MuleArtifactContext@3591009c: startup date [Tue Apr 23 22:30:21 IST 2019]; root of context hierarchy
+2019-04-23 22:30:22,794 [main] INFO  org.mule.config.spring.processors.NoDevkitInjectorProcessor - JSR-330 'javax.inject.Inject' annotation found and supported for autowiring
+2019-04-23 22:30:23,169 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:30:23,169 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:30:23,169 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:30:23,169 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:30:24,113 [main] WARN  org.mule.module.ognl.expression.OgnlExpressionEvaluator - OGNL module is deprecated and will be removed in Mule 4.0. Use MEL expressions instead.
+2019-04-23 22:30:24,492 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx2.log
+2019-04-23 22:30:24,504 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx2.log
+2019-04-23 22:30:24,749 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising model: _muleSystemModel
+2019-04-23 22:30:24,754 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Initialising flow: dbFlow
+2019-04-23 22:30:24,754 [main] INFO  org.mule.exception.DefaultMessagingExceptionStrategy - Initialising exception listener: org.mule.exception.DefaultMessagingExceptionStrategy@4faf104
+2019-04-23 22:30:24,793 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Initialising service: dbFlow.stage1
+2019-04-23 22:30:25,077 [main] INFO  org.mule.config.spring.SpringXmlConfigurationBuilder - Configured Mule using "org.mule.config.spring.SpringXmlConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-23 22:30:25,077 [main] INFO  org.mule.config.builders.AutoConfigurationBuilder - Configured Mule using "org.mule.config.builders.AutoConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-23 22:30:25,086 [main] INFO  com.mulesoft.module.policies.lifecyle.GateKeeper - GateKeeper Mode: DISABLED
+2019-04-23 22:30:25,088 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Starting app 'db'                                        +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:30:25,090 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Starting ResourceManager
+2019-04-23 22:30:25,091 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Started ResourceManager
+2019-04-23 22:30:25,131 [main] INFO  org.mule.module.http.internal.listener.DefaultHttpListenerConfig - Listening for requests on http://0.0.0.0:8081
+2019-04-23 22:30:25,133 [main] INFO  org.mule.modules.oauth2.provider.agents.DefaultSplashScreenAgent - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ DevKit Extensions (0) used in this application 
+                             +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:30:25,135 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Starting model: _muleSystemModel
+2019-04-23 22:30:25,136 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Starting flow: dbFlow
+2019-04-23 22:30:25,137 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Starting service: dbFlow.stage1
+2019-04-23 22:30:25,176 [main] INFO  org.mule.module.management.agent.WrapperManagerAgent - This JVM hasn't been launched by the wrapper, the agent will not run.
+2019-04-23 22:30:25,208 [main] INFO  org.mule.DefaultMuleContext - 
+**********************************************************************
+* Application: db                                                    *
+* OS encoding: \, Mule encoding: UTF-8                               *
+*                                                                    *
+* Agents Running:                                                    *
+*   Batch module default engine                                      *
+*   DevKit Extension Information                                     *
+*   JMX Agent                                                        *
+*   Wrapper Manager                                                  *
+**********************************************************************
+2019-04-23 22:43:40,837 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Initializing app 'db'                                    +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:43:41,118 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising RegistryBroker
+2019-04-23 22:43:41,274 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Starting discovery of extensions
+2019-04-23 22:43:41,613 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Discovered 1 extensions
+2019-04-23 22:43:41,614 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Registering extension validation (version 3.9)
+2019-04-23 22:43:41,664 [main] INFO  org.mule.config.spring.MuleArtifactContext - Refreshing org.mule.config.spring.MuleArtifactContext@3591009c: startup date [Tue Apr 23 22:43:41 IST 2019]; root of context hierarchy
+2019-04-23 22:43:43,384 [main] INFO  org.mule.config.spring.processors.NoDevkitInjectorProcessor - JSR-330 'javax.inject.Inject' annotation found and supported for autowiring
+2019-04-23 22:43:43,927 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:43:43,927 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:43:43,927 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:43:43,927 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 22:43:44,760 [main] WARN  org.mule.module.ognl.expression.OgnlExpressionEvaluator - OGNL module is deprecated and will be removed in Mule 4.0. Use MEL expressions instead.
+2019-04-23 22:43:45,039 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx2.log
+2019-04-23 22:43:45,052 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx2.log
+2019-04-23 22:43:45,336 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising model: _muleSystemModel
+2019-04-23 22:43:45,340 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Initialising flow: dbFlow
+2019-04-23 22:43:45,340 [main] INFO  org.mule.exception.DefaultMessagingExceptionStrategy - Initialising exception listener: org.mule.exception.DefaultMessagingExceptionStrategy@49fb0bbd
+2019-04-23 22:43:45,371 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Initialising service: dbFlow.stage1
+2019-04-23 22:43:45,607 [main] INFO  org.mule.config.spring.SpringXmlConfigurationBuilder - Configured Mule using "org.mule.config.spring.SpringXmlConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-23 22:43:45,607 [main] INFO  org.mule.config.builders.AutoConfigurationBuilder - Configured Mule using "org.mule.config.builders.AutoConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-23 22:43:45,614 [main] INFO  com.mulesoft.module.policies.lifecyle.GateKeeper - GateKeeper Mode: DISABLED
+2019-04-23 22:43:45,615 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Starting app 'db'                                        +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:43:45,618 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Starting ResourceManager
+2019-04-23 22:43:45,618 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Started ResourceManager
+2019-04-23 22:43:45,657 [main] INFO  org.mule.module.http.internal.listener.DefaultHttpListenerConfig - Listening for requests on http://0.0.0.0:8081
+2019-04-23 22:43:45,659 [main] INFO  org.mule.modules.oauth2.provider.agents.DefaultSplashScreenAgent - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ DevKit Extensions (0) used in this application 
+                             +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 22:43:45,663 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Starting model: _muleSystemModel
+2019-04-23 22:43:45,665 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Starting flow: dbFlow
+2019-04-23 22:43:45,667 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Starting service: dbFlow.stage1
+2019-04-23 22:43:45,706 [main] INFO  org.mule.module.management.agent.WrapperManagerAgent - This JVM hasn't been launched by the wrapper, the agent will not run.
+2019-04-23 22:43:45,722 [main] INFO  org.mule.DefaultMuleContext - 
+**********************************************************************
+* Application: db                                                    *
+* OS encoding: \, Mule encoding: UTF-8                               *
+*                                                                    *
+* Agents Running:                                                    *
+*   Batch module default engine                                      *
+*   DevKit Extension Information                                     *
+*   JMX Agent                                                        *
+*   Wrapper Manager                                                  *
+**********************************************************************
+2019-04-23 23:03:13,729 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Initializing app 'db'                                    +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 23:03:13,979 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising RegistryBroker
+2019-04-23 23:03:14,130 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Starting discovery of extensions
+2019-04-23 23:03:14,441 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Discovered 1 extensions
+2019-04-23 23:03:14,441 [main] INFO  org.mule.module.extension.internal.manager.DefaultExtensionManager - Registering extension validation (version 3.9)
+2019-04-23 23:03:14,494 [main] INFO  org.mule.config.spring.MuleArtifactContext - Refreshing org.mule.config.spring.MuleArtifactContext@3591009c: startup date [Tue Apr 23 23:03:14 IST 2019]; root of context hierarchy
+2019-04-23 23:03:15,931 [main] INFO  org.mule.config.spring.processors.NoDevkitInjectorProcessor - JSR-330 'javax.inject.Inject' annotation found and supported for autowiring
+2019-04-23 23:03:16,364 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 23:03:16,364 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 23:03:16,364 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 23:03:16,365 [main] WARN  org.mule.expression.DefaultExpressionManager - Expression string is not an expression.  Use isExpression(String) to validate first
+2019-04-23 23:03:17,067 [main] WARN  org.mule.module.ognl.expression.OgnlExpressionEvaluator - OGNL module is deprecated and will be removed in Mule 4.0. Use MEL expressions instead.
+2019-04-23 23:03:17,353 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-tx-log\tx2.log
+2019-04-23 23:03:17,365 [main] INFO  org.mule.util.journal.TransactionJournal - Using files for tx logs C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx1.log and C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\.\.mule\db\queue-xa-tx-log\tx2.log
+2019-04-23 23:03:17,563 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Initialising model: _muleSystemModel
+2019-04-23 23:03:17,568 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Initialising flow: dbFlow
+2019-04-23 23:03:17,568 [main] INFO  org.mule.exception.DefaultMessagingExceptionStrategy - Initialising exception listener: org.mule.exception.DefaultMessagingExceptionStrategy@4faf104
+2019-04-23 23:03:17,598 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Initialising service: dbFlow.stage1
+2019-04-23 23:03:17,811 [main] INFO  org.mule.config.spring.SpringXmlConfigurationBuilder - Configured Mule using "org.mule.config.spring.SpringXmlConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-23 23:03:17,813 [main] INFO  org.mule.config.builders.AutoConfigurationBuilder - Configured Mule using "org.mule.config.builders.AutoConfigurationBuilder" with configuration resource(s): "[ConfigResource{resourceName='C:\Users\ammati mouli\AnypointStudio\workspace\equus\.mule\apps\db\db.xml'}]"
+2019-04-23 23:03:17,818 [main] INFO  com.mulesoft.module.policies.lifecyle.GateKeeper - GateKeeper Mode: DISABLED
+2019-04-23 23:03:17,819 [main] INFO  org.mule.module.launcher.application.DefaultMuleApplication - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Starting app 'db'                                        +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 23:03:17,821 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Starting ResourceManager
+2019-04-23 23:03:17,821 [main] INFO  org.mule.util.queue.QueueXaResourceManager - Started ResourceManager
+2019-04-23 23:03:17,867 [main] INFO  org.mule.module.http.internal.listener.DefaultHttpListenerConfig - Listening for requests on http://0.0.0.0:8081
+2019-04-23 23:03:17,869 [main] INFO  org.mule.modules.oauth2.provider.agents.DefaultSplashScreenAgent - 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ DevKit Extensions (0) used in this application 
+                             +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2019-04-23 23:03:17,871 [main] INFO  org.mule.lifecycle.AbstractLifecycleManager - Starting model: _muleSystemModel
+2019-04-23 23:03:17,872 [main] INFO  org.mule.construct.FlowConstructLifecycleManager - Starting flow: dbFlow
+2019-04-23 23:03:17,872 [main] INFO  org.mule.processor.SedaStageLifecycleManager - Starting service: dbFlow.stage1
+2019-04-23 23:03:17,911 [main] INFO  org.mule.module.management.agent.WrapperManagerAgent - This JVM hasn't been launched by the wrapper, the agent will not run.
+2019-04-23 23:03:17,938 [main] INFO  org.mule.DefaultMuleContext - 
+**********************************************************************
+* Application: db                                                    *
+* OS encoding: \, Mule encoding: UTF-8                               *
+*                                                                    *
+* Agents Running:                                                    *
+*   Batch module default engine                                      *
+*   DevKit Extension Information                                     *
+*   JMX Agent                                                        *
+*   Wrapper Manager                                                  *
+**********************************************************************

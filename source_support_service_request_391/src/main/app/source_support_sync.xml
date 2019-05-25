@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:dynamicscrm="http://www.mulesoft.org/schema/mule/dynamicscrm" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/dynamicscrm http://www.mulesoft.org/schema/mule/dynamicscrm/current/mule-dynamicscrm.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    
+   
+    <flow name="source_support_syncFlow" initialState="started" processingStrategy="synchronous">
+        <jms:inbound-endpoint  queue="${source_support_service_request}" connector-ref="Active_MQ" doc:name="source_support_service_request"/>
+        <logger message="Get Source System message from queue " level="INFO" doc:name="Get Source System message from queue "/>
+        <set-session-variable variableName="sv_service_request_queue" value="#[payload]" doc:name="sv_service_request_queue"/>
+        <json:json-to-object-transformer returnClass="java.util.Map" doc:name="JSON to Object"/>
+        <choice doc:name="Choice">
+            <when expression="#[(payload.Data.serviceRequest.new_servicerequestid != null) &amp;&amp; (payload.Data.serviceRequest.new_servicerequestid != &quot;&quot;)]">
+                <dw:transform-message doc:name="Transform Message" metadata:id="9d72b056-fc9a-4e6b-a1e2-6aece71d35e6">
+                    <dw:input-payload doc:sample="Case-source-system.json" mimeType="application/java"/>
+                    <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+	Description: ((("Dispatch Reason/Problem Description:" ++ payload.Data.serviceRequest.new_dispatchreasonproblemdescription ++ "\n")
+					when (payload.Data.serviceRequest.new_dispatchreasonproblemdescription != null and payload.Data.serviceRequest.new_dispatchreasonproblemdescription != "") otherwise "") 
+					++ 
+				(("Scope of Work Detail/Notes:" ++ payload.Data.serviceRequest.new_scopeofworkdetailnotes ++ "\n") 
+				when (payload.Data.serviceRequest.new_scopeofworkdetailnotes != null and payload.Data.serviceRequest.new_scopeofworkdetailnotes != "") otherwise "")
+				++
+				(("Special Instructions:" ++ payload.Data.serviceRequest.new_specialinstructions ++ "\n")
+				when (payload.Data.serviceRequest.new_specialinstructions != null and payload.Data.serviceRequest.new_specialinstructions != "") otherwise "") 
+				++ 
+				((payload.Data.serviceRequest.new_worksitecountry ++ "\n") 
+				when (payload.Data.serviceRequest.new_worksitecountry != null and payload.Data.serviceRequest.new_worksitecountry != "") otherwise "") 
+				++ 
+				((payload.Data.serviceRequest.new_worksitephone ++ "\n") 
+				when (payload.Data.serviceRequest.new_worksitephone != null and payload.Data.serviceRequest.new_worksitephone != "") otherwise "") 
+				++ 
+				((payload.Data.serviceRequest.new_worksiteemailaddress ++ "\n") 
+				when (payload.Data.serviceRequest.new_worksiteemailaddress != null and payload.Data.serviceRequest.new_worksiteemailaddress != "") otherwise "") 
+				++ 
+				((payload.Data.serviceRequest.new_worksitestreetaddressline2 ++ "\n") 
+				when (payload.Data.serviceRequest.new_worksitestreetaddressline2 != null and payload.Data.serviceRequest.new_worksitestreetaddressline2 != "") otherwise "") 
+				++ 
+				((payload.Data.serviceRequest.new_worksitestreetaddressline3 ++ "\n") 
+				when (payload.Data.serviceRequest.new_worksitestreetaddressline3 != null and payload.Data.serviceRequest.new_worksitestreetaddressline3 != "") otherwise "") 
+				++ 
+				((payload.Data.serviceRequest.new_worksitestreetaddressline1 ++ "\n") 
+				when (payload.Data.serviceRequest.new_worksitestreetaddressline1 != null and payload.Data.serviceRequest.new_worksitestreetaddressline1 != "") otherwise "") 
+				++
+				((payload.Data.serviceRequest.new_worksitestreetaddressline4 ++ "\n") 
+				when (payload.Data.serviceRequest.new_worksitestreetaddressline4 != null and payload.Data.serviceRequest.new_worksitestreetaddressline4 != "") otherwise "") 
+				++ 
+				((payload.Data.serviceRequest.new_worksiteattention ++ "\n") 
+				when (payload.Data.serviceRequest.new_worksiteattention != null and payload.Data.serviceRequest.new_worksiteattention != "") otherwise "")
+				++ 
+				((payload.Data.serviceRequest.new_worksitelocationname ++ "\n") 
+				when (payload.Data.serviceRequest.new_worksitelocationname != null and payload.Data.serviceRequest.new_worksitelocationname != "") otherwise "") 
+				++ 
+				((payload.Data.serviceRequest.new_worksitezippostalcode ++ "\n") 
+				when (payload.Data.serviceRequest.new_worksitezippostalcode != null and payload.Data.serviceRequest.new_worksitezippostalcode != "") otherwise "") 
+				++ 
+				((payload.Data.serviceRequest.new_worksitecity ++ "\n") 
+				when (payload.Data.serviceRequest.new_worksitecity != null and payload.Data.serviceRequest.new_worksitecity != "") otherwise "") 
+				++ 
+				((payload.Data.serviceRequest.new_worksitestateprovince) 
+				when payload.Data.serviceRequest.new_worksitestateprovince != null otherwise "")),
+	Integrated_Partner__c: "Equus-Main",
+	Partner_Asset_Item__c: payload.Data.serviceRequest.new_serialnumberid when payload.Data.serviceRequest.new_serialnumberid != null otherwise "",
+	Partner_Case_Number__c: payload.Data.serviceRequest.new_caseidtxt when payload.Data.serviceRequest.new_caseidtxt != null otherwise "",
+	Partner_Dispatch_Number__c: payload.Data.serviceRequest.new_equusdispatchnumber when payload.Data.serviceRequest.new_equusdispatchnumber != null otherwise "",
+	Ship_to_City__c: payload.Data.serviceRequest.new_shiptoCity when payload.Data.serviceRequest.new_shiptoCity != null otherwise "",
+	Ship_to_Company_Name__c: payload.Data.serviceRequest.new_shiptolocationname when payload.Data.serviceRequest.new_shiptolocationname != null otherwise "",
+	Ship_To_Contact_Email_Address__c: payload.Data.serviceRequest.new_shiptoemailaddress when payload.Data.serviceRequest.new_shiptoemailaddress != null otherwise "",
+	Ship_to_Contact_Name__c: payload.Data.serviceRequest.new_shiptoattention when payload.Data.serviceRequest.new_shiptoattention != null otherwise "",
+	Ship_to_Contact_Phone_Number__c: payload.Data.serviceRequest.new_shiptophone when payload.Data.serviceRequest.new_shiptophone != null otherwise "",
+	Ship_to_Country__c: payload.Data.serviceRequest.new_shiptocountry when payload.Data.serviceRequest.new_shiptocountry != null otherwise "",
+	Ship_to_Postal__c: payload.Data.serviceRequest.new_shiptozippostalcode when payload.Data.serviceRequest.new_shiptozippostalcode != null otherwise "",
+	Ship_to_State__c: payload.Data.serviceRequest.new_shiptostateprovince when payload.Data.serviceRequest.new_shiptostateprovince != null otherwise "",
+	Ship_to_Street__c: payload.Data.serviceRequest.new_shiptostreetaddressline1 when payload.Data.serviceRequest.new_shiptostreetaddressline1 != null otherwise "",
+	Ship_to_Street_1__c: (payload.Data.serviceRequest.new_shiptostreetaddressline2 when payload.Data.serviceRequest.new_shiptostreetaddressline2 != null otherwise "") 
+	                    ++ 
+	                    (payload.Data.serviceRequest.new_shiptostreetaddressline3 when payload.Data.serviceRequest.new_shiptostreetaddressline3 != null otherwise "") 
+	                    ++ 
+	                    (payload.Data.serviceRequest.new_shiptostreetaddressline4 when payload.Data.serviceRequest.new_shiptostreetaddressline4 != null otherwise ""),
+	Subject: payload.Data.serviceRequest.new_equusdispatchnumber when payload.Data.serviceRequest.new_equusdispatchnumber != null otherwise "",
+	Type__c: payload.Data.serviceRequest.new_dispatchtype when payload.Data.serviceRequest.new_dispatchtype != null otherwise ""
+}]]></dw:set-payload>
+                    <dw:set-variable variableName="serviceRequest"><![CDATA[%dw 1.0
+%output application/java
+---
+new_servicerequestid: payload.Data.serviceRequest.new_servicerequestid when payload.Data.serviceRequest.new_servicerequestid != null otherwise ""]]></dw:set-variable>
+                </dw:transform-message>
+                <set-session-variable variableName="sv_source_system" value="#[payload]" doc:name="sv_source_system"/>
+                <logger message="Start to processing the  Source Support system from queue" level="INFO" doc:name="Start to processing the  Source Support system from queue"/>
+                <flow-ref name="source_support_syncSub_Flow" doc:name="source_support_syncSub_Flow"/>
+                <logger message="Finished Source Support Service to Update Service Queue processed successfully" level="INFO" doc:name="Finished!"/>
+            </when>
+            <otherwise>
+                <logger message="Missing the Service request id(CRM Id) for payload ::  #[message.payloadAs(java.lang.String)]" level="INFO" doc:name="Missing the Service request id"/>
+                <flow-ref name="sourceSupportService_error_handlingSub_Flow" doc:name="sourceSupportService_error_handlingSub_Flow"/>
+            </otherwise>
+        </choice>
+
+
+
+    <exception-strategy ref="sourceSupportServiceCatch_Exception_Strategy" doc:name="Reference Exception Strategy"/>
+  </flow>
+
+    <sub-flow name="source_support_syncSub_Flow">
+        <logger message="Get the Access token by done Authenticate" level="INFO" doc:name="Get the Access token "/>
+
+        <enricher target="#[flowVars.authentication]" doc:name="Message Enricher">
+            <flow-ref name="Authorization_Sub_Flow" doc:name="Authorization_Sub_Flow"/>
+        </enricher>
+        <logger message="Start to create a new case in Salesforce" level="INFO" doc:name="Start to create a new case in Salesforce"/>
+        <expression-component doc:name="Set Error Var"><![CDATA[sessionVars.sourcesupport="Failed to Invoke the Source Support service to create case for the Record :"+sessionVars.sv_source_system.Partner_Dispatch_Number__c;]]></expression-component>
+
+        <enricher target="#[flowVars.CaseExsist]" doc:name="Message Enricher">
+            <flow-ref name="Case_Sub_Flow" doc:name="Case_Sub_Flow"/>
+        </enricher>
+        <logger message="Start to Map the Service request attributes " level="INFO" doc:name="Start to Map the Service request attributes "/>
+        <expression-component doc:name="Set Error Var"><![CDATA[sessionVars.sourcesupport="Failed to push the update service request to queue for the Record :"+sessionVars.sv_source_system.Partner_Dispatch_Number__c;]]></expression-component>
+
+        <!-- <expression-component doc:name="Set Error Var"><![CDATA[sessionVars.code="103";
+sessionVars.message="Service request Queue to CRM : Dispatch Item Invoke got failed";
+sessionVars.flowName="Dispatch_Sub_Flow";]]></expression-component>
+        <enricher target="#[flowVars.DispatchExsist]" doc:name="Message Enricher">
+            <flow-ref name="Dispatch_Sub_Flow" doc:name="Dispatch_Sub_Flow"/>
+        </enricher>
+        <logger message="Dispatch Created :: #[flowVars.Dispatchitem]" level="INFO" doc:name="Logger"/> -->
+
+        <flow-ref name="source_system_sync_Serivce_request" doc:name="source_system_sync_Serivce_request"/>
+
+    </sub-flow>
+    <sub-flow name="Authorization_Sub_Flow">
+        <logger message="Invoke to get access token" level="INFO" doc:name="Invoke to get access token"/>
+        <http:request config-ref="HTTP_Request_Configuration_Authentication" path="${api.path.authentication}" method="POST" doc:name="HTTP">
+            <http:request-builder>
+                <http:query-param paramName="grant_type" value="${grant_type}"/>
+                <http:query-param paramName="client_id" value="${client_id}"/>
+                <http:query-param paramName="client_secret" value="${client_secret}"/>
+                <http:query-param paramName="username" value="${username.access}"/>
+                <http:query-param paramName="password" value="${password}"/>
+            </http:request-builder>
+        </http:request>
+        <json:json-to-object-transformer returnClass="java.util.HashMap" doc:name="JSON to Object"/>
+    </sub-flow>
+    <sub-flow name="Case_Sub_Flow">
+        <json:object-to-json-transformer doc:name="Object to JSON"/>
+        <logger message="Invoke to create the case " level="INFO" doc:name="Invoke to create the case "/>
+
+
+        <http:request config-ref="HTTP_Request_Configuration" path="${api.path.CaseCreated}" method="POST" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Authorization" value="${authorization}"/>
+                <http:header headerName="Content-Type" value="${content-type}"/>
+
+
+            </http:request-builder>
+        </http:request>
+        <json:json-to-object-transformer returnClass="java.util.HashMap" doc:name="JSON to Object"/>
+    </sub-flow>
+   <!--  <sub-flow name="Dispatch_Sub_Flow">
+        <logger message="##############==#[flowVars.CaseExsist.id]" level="INFO" doc:name="Logger"/>
+        <set-payload value="#[flowVars.CaseExsist]" doc:name="Set Payload"/>
+        <json:object-to-json-transformer doc:name="Object to JSON"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="14266bf5-e4a7-4aaf-b107-582e20ffbceb">
+            <dw:input-payload doc:sample="Dispatch-service-system.json" mimeType="application/json"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+===
+{
+	Case__c: payload.id,
+	Part_Number__c: "",
+	Quantity__c: ""
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <http:request config-ref="HTTP_Request_Configuration_Dispatch" path="${api.path.DispatchCreated}" method="POST" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Authorization" value="${authorization}"/>
+                <http:header headerName="content-type" value="${content-type}"/>
+            </http:request-builder>
+        </http:request>
+        <json:json-to-object-transformer returnClass="java.util.HashMap" doc:name="JSON to Object"/>
+
+    </sub-flow> -->
+    <sub-flow name="source_system_sync_Serivce_request">
+        <set-payload value="#[flowVars.CaseExsist]" doc:name="Set Payload"/>
+
+        <dw:transform-message doc:name="Transform Message">
+        <dw:input-payload mimeType="application/java"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	new_onsitecompanydispatchreferencenumber: payload.id,
+	new_equusdispatchnumber: sessionVars.sv_source_system.Partner_Dispatch_Number__c,
+	new_caseidtxt: sessionVars.sv_source_system.Partner_Case_Number__c,
+	new_servicerequestid: flowVars.serviceRequest.new_servicerequestid
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <json:json-to-object-transformer returnClass="java.util.HashMap" doc:name="JSON to Object"/>
+        <logger message="Current Record Info :: #[payload]" level="INFO" doc:name="Current Record Info"/>
+
+
+
+        <jms:outbound-endpoint queue="${update_service_request}" connector-ref="Active_MQ" doc:name="update_service_request"/>
+
+    </sub-flow>
+
+</mule>

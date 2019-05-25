@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:dynamicscrm="http://www.mulesoft.org/schema/mule/dynamicscrm"  xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:json="http://www.mulesoft.org/schema/mule/json"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw"
+	xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/dynamicscrm http://www.mulesoft.org/schema/mule/dynamicscrm/current/mule-dynamicscrm.xsd">
+    
+    <flow name="Recursive_customernoteFlow">
+    <choice doc:name="Check if last page reached">
+      <when expression="#[sessionVars.sv_total_pages_note &gt; 0]">
+        <logger message=" #['current page:  ' + sessionVars.sv_total_pages_note]" level="INFO" doc:name="Print current page number"/>
+        <flow-ref name="Messages_customernoteFlow" doc:name="Messages_customernoteFlow"/>
+      </when>
+      <otherwise>
+        <logger message="Last page reached, skip" level="INFO" doc:name="Last page reached, skip"/>
+      </otherwise>
+    </choice>
+  </flow>
+    
+    <sub-flow name="Messages_customernoteFlow">
+        <logger message="Call API to get data for current page" level="INFO" doc:name="Call API to get data for current page"/>
+    <http:request config-ref="HTTP_Request_Configuration" path="${api.path.getCustomerNoteByDateRange}" method="GET" doc:name="HTTP Get">
+                    <http:request-builder>
+                <http:query-param paramName="page" value="#[sessionVars.sv_total_pages_note]"/>
+                <http:query-param paramName="start" value="#[flowVars.fv_lastrun_customer_note_update == null? flowVars.fv_lastrun_customer_note:flowVars.fv_lastrun_customer_note_update]"/>
+                <http:query-param paramName="end" value="${enddate}"/>
+                    </http:request-builder>
+                </http:request>
+        <dw:transform-message doc:name="Transform Message">
+        <dw:input-payload mimeType="application/json"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload.data map ((payload01 , indexOfPayload01) -> {
+   customer_notes: {
+    crm_case_number: payload01.case_number,
+    originated_by: payload01.originated_by,
+    customer_note_id: payload01.customer_note_id,
+    created_date: payload01.created_date,
+    note: payload01.message
+
+	}
+})]]></dw:set-payload>
+        </dw:transform-message>
+        <json:json-to-object-transformer returnClass="java.util.List" doc:name="JSON to Object List"/>
+        <logger message="Start inserting Customer Note messages to queue date : #[sessionVars.sv_end_date]" level="INFO" doc:name="Start inserting Customer Note messages to queue"/>
+        <foreach counterVariableName="note_count" doc:name="For Each">
+            <set-payload value="#[payload.customer_notes]" doc:name="Current Customer Note"/>
+            <logger message="Note #[flowVars.note_count]:  #[payload]" level="INFO" doc:name="Current Record Info"/>
+            <jms:outbound-endpoint queue="${customer_note_queue}" connector-ref="Active_MQ" doc:name="customer_note_queue"/>
+        </foreach>
+        <set-session-variable variableName="sv_total_pages_note" value="#[sv_total_pages_note - 1]" doc:name="sv_total_pages_note"/>
+        <flow-ref name="Recursive_customernoteFlow" doc:name="Recursive_customernoteFlow"/>
+    </sub-flow>
+    
+    
+    <flow name="customernoteFlow" initialState="stopped" processingStrategy="synchronous">
+        <poll doc:name="Poll">
+            <fixed-frequency-scheduler frequency="1" timeUnit="HOURS" />
+            <watermark variable="fv_lastrun_customer_note" default-expression="#['2018-07-10']" update-expression="#[flowVars.fv_lastrun_customer_note_update]"/>
+            <processor-chain doc:name="Processor Chain">
+                <logger message="Start polling Customer Note from API: Start = #[flowVars.fv_lastrun_customer_note_update == null? flowVars.fv_lastrun_customer_note:flowVars.fv_lastrun_customer_note_update], End = ${enddate} " level="INFO" doc:name="Start polling Customer Note from API"/>
+                <http:request config-ref="HTTP_Request_Configuration" path="${api.path.getCustomerNoteByDateRange}" method="GET" doc:name="HTTP Get">
+                    <http:request-builder>
+                        <http:query-param paramName="page" value="1"/>
+                        <http:query-param paramName="start" value="#[flowVars.fv_lastrun_customer_note_update == null? flowVars.fv_lastrun_customer_note:flowVars.fv_lastrun_customer_note_update]"/>
+                        <http:query-param paramName="end" value="${enddate}"/>
+                    </http:request-builder>
+                </http:request>
+            </processor-chain>
+        </poll>
+        
+        <logger message="Result from customer note API: #[payload] " level="INFO" doc:name="Result from note API"/>
+        <json:json-to-object-transformer returnClass="java.util.HashMap" doc:name="JSON to Hash Map"/>
+        <set-session-variable variableName="sv_total_pages_note" value="#[payload.total_pages]" doc:name="sv_total_pages_note"/>
+        <set-session-variable variableName="sv_max_created_date" value="#[payload.data.size() == 0 ? flowVars.fv_lastrun_customer_note:payload.data[0].created_date]" doc:name="sv_max_created_date"/>
+        <flow-ref name="Recursive_customernoteFlow" doc:name="Recursive_customernoteFlow"/>
+        <set-variable variableName="fv_lastrun_customer_note_update" value="#[sessionVars.sv_max_created_date]" doc:name="fv_lastrun_customer_note_update"/>
+        <logger message="Finished!" level="INFO" doc:name="Finished!"/>
+        <exception-strategy ref="Catch_Exception_Handling_Notes" doc:name="Reference Exception Strategy"/>
+    </flow>
+    <flow name="customernote_fromqueue_tocrm" initialState="started" processingStrategy="synchronous">
+        <jms:inbound-endpoint queue="${customer_note_queue}" connector-ref="Active_MQ" doc:name="customer_note_queue">
+            <jms:transaction action="ALWAYS_BEGIN"/>
+        </jms:inbound-endpoint>
+        <set-session-variable variableName="sv_crm_note_customer" value="#[payload]" doc:name="sv_crm_note_customer"/>
+        <set-session-variable variableName="sv_note" value="#[payload]" doc:name="sv_note"/>
+        <logger message="Get customernote from queue: #[payload]" level="INFO" doc:name="Get customernote from queue"/>
+        <enricher target="#[variable:caseExists]" doc:name="caseExists">
+            <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot; row=&quot;1&quot; &gt;     &lt;entity name=&quot;incident&quot; &gt;         &lt;filter&gt;             &lt;condition attribute=&quot;ticketnumber&quot; operator=&quot;eq&quot; value=&quot;#[payload.crm_case_number]&quot; /&gt;         &lt;/filter&gt;     &lt;/entity&gt; &lt;/fetch&gt;" doc:name="Query CRM Case"/>
+        </enricher>
+        <choice doc:name="Check if case exists">
+            <when expression="#[caseExists.hasNext() == true]">
+                <logger message="Case: #[sessionVars.sv_crm_note_customer.crm_case_number] exists, continue" level="INFO" doc:name="Case exists, continue"/>
+                <set-variable variableName="fv_case_info" value="#[caseExists.next()]" doc:name="fv_case_info"/>
+                <enricher target="#[variable:noteExists]" doc:name="noteExists">
+                    <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot; row=&quot;1&quot; &gt;
+    &lt;entity name=&quot;new_customernote&quot; &gt;
+        &lt;filter&gt;
+            &lt;condition attribute=&quot;new_customer_note_id&quot; operator=&quot;eq&quot; value=&quot;#[payload.customer_note_id]&quot; /&gt;
+        &lt;/filter&gt;
+    &lt;/entity&gt;
+&lt;/fetch&gt;" doc:name="Query CRM Customer Note"/>
+                </enricher>
+
+                <choice doc:name="Check if note exists">
+                    <when expression="#[noteExists.hasNext() ==  false]">
+                        <logger message="New note, start to create with case: #[sessionVars.sv_crm_note_customer.crm_case_number]" level="INFO" doc:name="New note, start to create"/>
+                        <dw:transform-message doc:name="Transform Message">
+                            <dw:input-payload mimeType="application/java"/>
+                            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+using(
+	defaultUser = lookup("lookup-default-user", {
+	name: 0
+})
+)
+
+{
+	new_customer_note_id: sessionVars.sv_crm_note_customer.customer_note_id as :number,
+	ownerid_referenceto_systemuser: defaultUser.systemuserid,
+	new_incidentid_referenceto_incident: flowVars.fv_case_info.incidentid,
+	new_subject: sessionVars.sv_crm_note_customer.originated_by,
+	new_message: sessionVars.sv_crm_note_customer.note,
+	new_messagetype: 279640000 // - informational ; 279640001 - Response Required
+}
+
+]]></dw:set-payload>
+                        </dw:transform-message>
+                        <dynamicscrm:create config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" logicalName="new_customernote" doc:name="Create Customer Note in CRM"/>
+
+                    </when>
+                    <otherwise>
+                        <logger message="Note exists in CRM, skip" level="INFO" doc:name="Note exists in CRM, skip"/>
+                    </otherwise>
+                </choice>
+            </when>
+            <otherwise>
+                <logger message="Case: #[sessionVars.sv_crm_note_customer.crm_case_number] does not exist, skip" level="INFO" doc:name="Case does not exist, skip"/>
+            </otherwise>
+        </choice>
+        <exception-strategy ref="Catch_Exception_Handling_Notes" doc:name="Reference Exception Strategy"/>
+    </flow>
+</mule>

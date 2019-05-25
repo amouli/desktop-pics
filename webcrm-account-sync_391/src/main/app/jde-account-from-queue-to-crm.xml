@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:schedulers="http://www.mulesoft.org/schema/mule/schedulers" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:json="http://www.mulesoft.org/schema/mule/json"
+	xmlns:dynamicscrm="http://www.mulesoft.org/schema/mule/dynamicscrm"
+	xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/dynamicscrm http://www.mulesoft.org/schema/mule/dynamicscrm/current/mule-dynamicscrm.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mule/schedulers/current/mule-schedulers.xsd">
+  <flow name="jde-account-from-queue-to-crmFlow" initialState="started" processingStrategy="synchronous">
+    <jms:inbound-endpoint queue="${jde.account_queue}" connector-ref="Active_MQ" doc:name="jde_account_queue">
+      <jms:transaction action="ALWAYS_BEGIN"/>
+    </jms:inbound-endpoint>
+    <logger message="Start Syncing Account: #[payload]" level="INFO" category="jde-account-from-queue-to-crm.jde-account-from-queue-to-crm-flow" doc:name="Start Syncing Account"/>
+    <json:object-to-json-transformer doc:name="Object to JSON"/>
+    <json:json-to-object-transformer returnClass="java.util.HashMap" doc:name="JSON to Hash Map"/>
+    <set-variable variableName="fv_jde_account" value="#[payload]" doc:name="fv_jde_account"/>
+    <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot;&gt;&lt;entity name=&quot;account&quot;&gt;&lt;attribute name=&quot;accountid&quot; /&gt;  &lt;filter type=&quot;and&quot;&gt; &lt;condition attribute=&quot;accountnumber&quot; operator=&quot;eq&quot; value=&quot;#[flowVars.fv_jde_account.account_number]&quot; /&gt;&lt;condition attribute=&quot;statecode&quot; operator=&quot;eq&quot; value=&quot;0&quot; /&gt; &lt;/filter&gt;&lt;/entity&gt;&lt;/fetch&gt;" doc:name="Query crm for account"/>
+    <choice doc:name="Check if account exists in crm">
+      <when expression="#[payload.hasNext()]">
+        <logger message="Start updating account #[flowVars.fv_jde_account.account_number] in crm" level="INFO" category="jde-account-from-queue-to-crm.jde-account-from-queue-to-crm-flow" doc:name="Start update account in crm"/>
+        <set-variable variableName="fv_crm_account" value="#[payload.next()]" doc:name="fv_crm_account"/>
+        <dw:transform-message doc:name="Transform Message">
+          <dw:input-payload mimeType="application/java"/>
+          <dw:set-payload>
+            <![CDATA[%dw 1.0
+%output application/java
+---
+using(
+	currentRegion = lookup("lookup-region", {
+	accountregion: flowVars.fv_jde_account.region_name
+})
+)
+using(
+	currentUser = lookup("lookup-user", {
+	name: flowVars.fv_jde_account.sales_rep_name
+})
+)
+using(
+	defaultUser = lookup("lookup-default-user", {
+	name: 0
+})
+)
+
+using(
+	currentBranch = lookup("lookup-branchnumber", {
+	new_branchnumber: flowVars.fv_jde_account.region_id
+})
+)
+
+{
+	ownerid_referenceto_systemuser: defaultUser.systemuserid when currentUser.systemuserid == null otherwise currentUser.systemuserid,
+	telephone1: flowVars.fv_jde_account.phone_number1,
+	telephone2: flowVars.fv_jde_account.phone_number2,
+	emailaddress1: flowVars.fv_jde_account.email,
+	new_termscode: flowVars.fv_jde_account.payment_term,
+	name: flowVars.fv_jde_account.account_name,
+	creditonhold: flowVars.fv_jde_account.credit_hold as :boolean,
+	creditlimit: flowVars.fv_jde_account.credit_limit as :number,
+	new_markup: flowVars.fv_jde_account.markup as :number {class: "java.math.BigDecimal"},
+	fax: flowVars.fv_jde_account.fax_number,
+	new_accountregion: currentRegion.accountregion,
+	new_branchnumber : currentBranch.new_branchnumber,
+	new_porequired :  flowVars.fv_jde_account.requiredPO as :boolean,
+	new_jdecreatedon: flowVars.fv_jde_account.create_date as :date {format: "M/d/yyyy"},
+	new_accounttype: "279640000" when flowVars.fv_jde_account.account_type == "S" otherwise
+					 "279640001" when flowVars.fv_jde_account.account_type == "I" otherwise
+					 "279640002" when flowVars.fv_jde_account.account_type == "A" otherwise
+					 "279640005" when flowVars.fv_jde_account.account_type == "B" otherwise
+					 "279640003" when flowVars.fv_jde_account.account_type == "C" otherwise
+					 "279640006" when flowVars.fv_jde_account.account_type == "D" otherwise
+				  	 "279640004"
+	
+}]]>
+          </dw:set-payload>
+        </dw:transform-message>
+        <logger message="After response from DW :: #[payload]" level="INFO" doc:name="After response from DW"/>
+        <dynamicscrm:update config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" id="#[flowVars.fv_crm_account.accountid]" logicalName="account" doc:name="Update Account to CRM"/>
+        <logger message="Account Number #[flowVars.fv_jde_account.account_number] Has Been Updated Successfully" level="INFO" category="jde-account-from-queue-to-crm.jde-account-from-queue-to-crm-flow" doc:name="Finished"/>
+      </when>
+      <otherwise>
+        <logger message="Account #[flowVars.fv_jde_account.account_number] doesn't exist in crm, skip" level="INFO" category="jde-account-from-queue-to-crm.jde-account-from-queue-to-crm-flow" doc:name="Account doesn't exist in crm, skip"/>
+      </otherwise>
+    </choice>
+    <exception-strategy ref="Catch_Exception_Handling1" doc:name="Reference Exception Strategy"/>
+  </flow>
+</mule>

@@ -1,0 +1,137 @@
+{  
+   "RMA_Request":[  
+      {  
+         "Request_Items":[  
+            {  
+               "action":null,
+               "description":null,
+               "is_component":"False",
+               "order_date":"2/4/2009 12:00:00 AM",
+               "order_number":"1289270",
+               "part_number":"106264",
+               "product_code":"VIPSYS-NB",
+               "product_description":null,
+               "rma_id":"36455",
+               "rma_type":"Notebook",
+               "serial_number":"921568"
+            },
+            {  
+               "action":null,
+               "description":null,
+               "is_component":"True",
+               "order_date":"2/4/2009 12:00:00 AM",
+               "order_number":"1289270",
+               "part_number":"76797",
+               "product_code":"MC0001",
+               "product_description":null,
+               "rma_id":"36455",
+               "rma_type":"",
+               "serial_number":"MC0001-00921568-1.0"
+            }
+         ],
+         "action_request":"Depot System Repair",
+         "address":[  
+            {  
+               "address_company_name":"ABC",
+               "address_line_1":"123 MAIN STREET",
+               "address_line_2":"TEST2",
+               "address_line_3":"TEST3",
+               "address_line_4":"",
+               "city":"ABCDE",
+               "country":"Brazil",
+               "country_code":"BR",
+               "postal_code":"987654321012",
+               "state":""
+            }
+         ],
+         "comments":"First, install Node.js. Then, install the latest Cordova and Ionic command-line tools in your terminal. Follow the Android and iOS platform guides to install required tools for development.",
+         "contact_info":[  
+            {  
+               "contact_email":"lchen@equuscs.com",
+               "contact_name":"Leo Chen",
+               "contact_phone":"1234567890",
+               "emailcc":"haha@equuscs.com",
+               "po_number":"RMA "
+            }
+         ],
+         "create_date":"2/1/2018 1:44:00 AM",
+         "customer_number":"9010226",
+         "order_number":null,
+         "original_po_number":null,
+         "problem_description":"Equus is proud to be one of North America's largest computing system manufacturers. ",
+         "rma_id":"36455",
+         "system_serial_number":null,
+         "web_user_id":"32050014",
+         "will_call":"False"
+      },
+      {  
+         "Request_Items":[  
+            {  
+               "action":null,
+               "description":null,
+               "is_component":null,
+               "order_date":"2/4/2009 12:00:00 AM",
+               "order_number":"1289270",
+               "part_number":"106264",
+               "product_code":"VIPSYS-NB",
+               "product_description":null,
+               "rma_id":"36454",
+               "rma_type":"Notebook",
+               "serial_number":"921568"
+            },
+            {  
+               "action":null,
+               "description":null,
+               "is_component":null,
+               "order_date":"2/4/2009 12:00:00 AM",
+               "order_number":"1289270",
+               "part_number":"76797",
+               "product_code":"MC0001",
+               "product_description":null,
+               "rma_id":"36454",
+               "rma_type":"",
+               "serial_number":"MC0001-00921568-1.0"
+            }
+         ],
+         "action_request":"Credit Return (by Equus approval only)",
+         "address":[  
+            {  
+               "address_company_name":"Equus Computer Systems - MN House Acct",
+               "address_line_1":"5801 Clearwater Dr",
+               "address_line_2":"",
+               "address_line_3":"",
+               "address_line_4":"",
+               "city":"Minnetonka",
+               "country":"United States",
+               "country_code":"US",
+               "postal_code":"55343",
+               "state":"Minnesota"
+            }
+         ],
+         "comments":" Comments",
+         "contact_info":[  
+            {  
+               "contact_email":"lchen@equuscs.com",
+               "contact_name":"Leo Chen",
+               "contact_phone":"1234567890",
+               "emailcc":"lchen2@equuscs.com",
+               "po_number":"RMA "
+            }
+         ],
+         "create_date":"2/1/2018 12:17:00 AM",
+         "customer_number":"9010226",
+         "order_number":null,
+         "original_po_number":null,
+         "problem_description":" Description",
+         "rma_id":"36454",
+         "system_serial_number":null,
+         "web_user_id":"32050014",
+         "will_call":"False"
+      }
+   ],
+   "rows_per_page":10,
+   "status_code":"200",
+   "status_message":"Success",
+   "total_pages":"1",
+   "total_rows":"2"
+}

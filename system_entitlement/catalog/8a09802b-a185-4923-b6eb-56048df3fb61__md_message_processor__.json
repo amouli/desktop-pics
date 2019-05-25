@@ -1,0 +1,16 @@
+{
+    "inputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "getEntitlement"
+        }
+    },
+    "outputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "getEntitlement"
+        }
+    },
+    "id": "8a09802b-a185-4923-b6eb-56048df3fb61",
+    "version": "5.2.0.0"
+}

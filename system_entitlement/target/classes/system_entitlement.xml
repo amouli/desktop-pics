@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:schedulers="http://www.mulesoft.org/schema/mule/schedulers" xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mule/schedulers/current/mule-schedulers.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd">
+    <flow name="system_entitlement_to_queue" initialState="started">
+        <poll doc:name="Poll">
+            <schedulers:cron-scheduler expression="0 0 0 1/1 * ? *" timeZone="Central Standard Time"/>
+            <processor-chain doc:name="Processor Chain">
+                <logger level="INFO" doc:name="Start polling System Entitlement from API " message="Start polling System Entitlement from API "/>
+                <dw:transform-message doc:name="Transform Message">
+                <dw:input-payload mimeType="application/java"/>
+                    <dw:set-payload>
+                    <![CDATA[%dw 1.0
+%output application/java
+---
+{
+	username : p('username.access'),
+	password : p('password.access'),
+	grant_type : p('grant_type.access')
+}]]>
+		</dw:set-payload>
+                </dw:transform-message>
+                <expression-component doc:name="Set Error Var"><![CDATA[sessionVars.system_entitlement_message = "Failed to create the access token from System Entitlement API";]]></expression-component>
+                <http:request config-ref="HTTP_Request_Configuration" path="${http.path.acces_token}" method="POST" doc:name="HTTP Access token">
+                </http:request>
+            </processor-chain>
+        </poll>
+        <json:json-to-object-transformer returnClass="java.util.HashMap" doc:name="JSON to Object"/>
+        <set-variable variableName="fv_access_token" value="#[payload.access_token]" doc:name="fv_access_token"/>
+        <dw:transform-message doc:name="Transform Message">
+        <dw:input-payload mimeType="application/json"/>
+            <dw:set-payload>
+            <![CDATA[%dw 1.0
+%output application/java
+---
+{}]]>
+</dw:set-payload>
+            <dw:set-variable variableName="startDt">
+            <![CDATA[%dw 1.0
+%output application/java
+---
+(now - |P1M|) as :string {format:"yyyy-MM-dd"}]]>
+</dw:set-variable>
+            <dw:set-variable variableName="endDt">
+            <![CDATA[%dw 1.0
+%output application/java
+---
+(now - |P1D|) as :string {format:"yyyy-MM-dd"}]]>
+</dw:set-variable>
+        </dw:transform-message>
+        <logger level="INFO" doc:name="Start trigger System Entitlement from API" message="Start trigger System Entitlement from API "/>
+        <expression-component doc:name="Set Error Var"><![CDATA[sessionVars.system_entitlement_message = "Failed to Invoke the System Entitlement API to fetch the record details";]]></expression-component>
+        <http:request config-ref="HTTP_Request_Configuration" path="${http.path.getSystemEntitlement}/${startDate}/${endDate}" method="GET" doc:name="HTTP Get">
+            <http:request-builder>
+                <http:header headerName="Accept" value="${format}"/>
+                <http:header headerName="Authorization" value="${authorization}"/>
+                <http:header headerName="Content-Type" value="${format}"/>
+            </http:request-builder>
+        </http:request>
+        <json:json-to-object-transformer returnClass="java.util.HashMap" doc:name="JSON to Object"/>
+        <set-variable variableName="fv_total_pages" value="#[payload.Systems.total_pages]" doc:name="fv_total_pages"/>
+        <flow-ref name="getMessage_to_QueueSub_Flow" doc:name="getMessage_to_QueueSub_Flow"/>
+        <logger message="Finished pushing the records from System Entitlement to Queue" level="INFO" doc:name="Finished!"/>
+        <exception-strategy ref="systemEntitlementCatch_Exception_Strategy" doc:name="Reference Exception Strategy"/>
+    </flow>
+    <sub-flow name="getMessage_to_QueueSub_Flow">
+        <enricher target="#[flowVars.sf]" doc:name="sf_access_token">
+            <processor-chain doc:name="Processor Chain">
+                <expression-component doc:name="Set Error Var"><![CDATA[sessionVars.system_entitlement_message = "Failed to create the Salesforce access token for Salesforce";]]></expression-component>
+                <http:request config-ref="HTTP_Request_Configuration_Salesforce" path="${api.path.authentication}" method="POST" doc:name="HTTP">
+                    <http:request-builder>
+                        <http:query-param paramName="grant_type" value="${grant_type.access}"/>
+                        <http:query-param paramName="client_id" value="${client_id}"/>
+                        <http:query-param paramName="client_secret" value="${client_secret}"/>
+                        <http:query-param paramName="username" value="${username.sf}"/>
+                        <http:query-param paramName="password" value="${password}"/>
+                    </http:request-builder>
+                </http:request>
+                <dw:transform-message doc:name="Transform Message">
+                <dw:input-payload mimeType="application/json"/>
+                    <dw:set-payload>
+                    <![CDATA[%dw 1.0
+%output application/java
+---
+payload.access_token]]>
+		</dw:set-payload>
+                </dw:transform-message>
+            </processor-chain>
+        </enricher>
+        <expression-component doc:name="Iterated the total pages"><![CDATA[java.util.List ListObj = new java.util.ArrayList();
+
+ int Tpages =flowVars.fv_total_pages;
+
+
+	for(int i=1; i<= Tpages; i++)
+{
+	ListObj.add(i);
+}
+
+return payload = ListObj;
+
+
+
+]]></expression-component>
+        <logger message="Start to GET the System Entitlement API Info" level="INFO" doc:name="Start to GET"/>
+        <foreach counterVariableName="Currentpage" doc:name="For Each">
+            <logger message="Currentpage :: #[flowVars.Currentpage]" level="INFO" doc:name="Current Page count"/>
+            <expression-component doc:name="Set Error Var"><![CDATA[sessionVars.system_entitlement_message = "Failed to Invoke the System Entitlement API to fetch the details for pagenumber" + payload;]]></expression-component>
+            <http:request config-ref="HTTP_Request_Configuration" path="${http.path.getSystemEntitlement}/${startDate}/${endDate}/#[payload]" method="GET" doc:name="HTTP">
+                <http:request-builder>
+                    <http:header headerName="Content-Type" value="${format}"/>
+                    <http:header headerName="Accept" value="${format}"/>
+                    <http:header headerName="Authorization" value="${authorization}"/>
+                </http:request-builder>
+            </http:request>
+            <dw:transform-message doc:name="Transform Message" metadata:id="8a09802b-a185-4923-b6eb-56048df3fb61">
+                <dw:input-payload mimeType="application/json" doc:sample="Entitlementsingle.json"/>
+                <dw:set-payload>
+                <![CDATA[%dw 1.0
+%output application/json
+---
+{ 
+	Systems: {
+		System:[] when payload.Systems.System == null otherwise payload.Systems.System map ((system , indexOfSystem) -> {
+			SerialNumber: system.SerialNumber when system.SerialNumber != null otherwise "",
+			AccountName: system.AccountName when system.AccountName != null otherwise "",
+			AccountNumber: system.AccountNumber when system.AccountNumber != null otherwise "",
+			Ship_Date: system.Ship_Date when system.Ship_Date != null otherwise "",
+			AssetProductCode: system.AssetProductCode when system.AssetProductCode != null otherwise "",
+			System_Number: system.System_Number when system.AssetProductCode != null otherwise "",
+			System_Description: system.System_Description when system.System_Description != null otherwise "",
+			Location: {
+				Name: system.Location.Name when system.Location.Name != null otherwise "",
+				Address1: system.Location.Address1 when system.Location.Address1 != null otherwise "",
+				Address2: system.Location.Address2 when system.Location.Address2 != null otherwise "",
+				Address3: system.Location.Address3 when system.Location.Address3 != null otherwise "",
+				Address4: system.Location.Address4 when system.Location.Address4 != null otherwise "",
+				City: system.Location.City when system.Location.City != null otherwise "",
+				StateProvince: system.Location.StateProvince when system.Location.StateProvince != null otherwise "",
+				Country: system.Location.Country when system.Location.Country != null otherwise "",
+				PostalCode: system.Location.PostalCode when system.Location.PostalCode != null otherwise ""
+			},
+			Entitlements: {
+				Entitlement: [] when system.Entitlements.Entitlement == null otherwise system.Entitlements.Entitlement map ((entitlement , indexOfEntitlement) -> {
+					Service_Description: entitlement.ServiceSKU when entitlement.ServiceSKU != null otherwise "",
+					Service_SLA: entitlement.Service_Description when entitlement.Service_Description != null otherwise "",
+					Converge_Start_Date: entitlement.Service_SLA when entitlement.Service_SLA != null otherwise "",
+					Coverage_Start_Date: entitlement.Converge_Start_Date when entitlement.Converge_Start_Date != null otherwise "",
+					Coverage_End_Date: entitlement.Coverage_End_Date when entitlement.Coverage_End_Date != null otherwise ""
+				})
+			},
+			BOMList: {
+				Item: [] when system.BOMList.Item == null otherwise system.BOMList.Item map ((item , indexOfItem) -> {
+					Part_Number: item.Part_Number when item.Part_Number != null otherwise "",
+					Part_Description: item.Part_Description when item.Part_Description != null otherwise "",
+					Quantity: item.Quantity when item.Quantity != null otherwise ""
+				})
+			}
+		})
+	}
+}]]>
+		</dw:set-payload>
+            </dw:transform-message>
+            <set-session-variable variableName="sv_system_entitlement" value="#[message.payloadAs(java.lang.String)]" doc:name="sv_system_entitlement"/>
+            <logger level="INFO" doc:name="Start inserting System Entitlement messages to queue" message="Start inserting System Entitlement messages to queue"/>
+            <dw:transform-message doc:name="Transform Message">
+                <dw:input-payload mimeType="application/json"/>
+                <dw:set-payload>
+                <![CDATA[%dw 1.0
+%output application/json
+---
+payload ++ salesforce_token : flowVars.sf]]>
+</dw:set-payload>
+            </dw:transform-message>
+            <json:json-to-object-transformer returnClass="java.util.HashMap" doc:name="JSON to Object"/>
+            <jms:outbound-endpoint queue="${system_entitlement_queue}" connector-ref="Active_MQ" doc:name="system_entitlement_queue"/> 
+        </foreach>
+
+    </sub-flow>
+    <flow name="System_Entitlement_to_SalesforceFlow">
+        <jms:inbound-endpoint queue="${system_entitlement_queue}" connector-ref="Active_MQ" doc:name="system_entitlement_queue">
+            <jms:transaction action="ALWAYS_BEGIN"/>
+        </jms:inbound-endpoint>
+        <logger message="Get System Entitlement from Queue " level="INFO" doc:name="Get System Entitlement from Queue"/>
+        <set-variable variableName="sf_access_token" value="#[payload.salesforce_token]" doc:name="sf_access_token"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="b491aaae-0ecf-498f-9762-eda2a1ce2e3f">
+        <dw:input-payload mimeType="application/java" doc:sample="sample_data\json.json"/>
+            <dw:set-payload>
+            <![CDATA[%dw 1.0
+%output application/json
+---
+{ 
+	Systems: {
+		System:[] when payload.Systems.System == null otherwise payload.Systems.System map ((system , indexOfSystem) -> {
+			SerialNumber: system.SerialNumber when system.SerialNumber != null otherwise "",
+			AccountName: system.AccountName when system.AccountName != null otherwise "",
+			AccountNumber: system.AccountNumber when system.AccountNumber != null otherwise "",
+			Ship_Date: system.Ship_Date when system.Ship_Date != null otherwise "",
+			AssetProductCode: system.AssetProductCode when system.AssetProductCode != null otherwise "",
+			System_Number: system.System_Number when system.AssetProductCode != null otherwise "",
+			System_Description: system.System_Description when system.System_Description != null otherwise "",
+			Location: {
+				Name: system.Location.Name when system.Location.Name != null otherwise "",
+				Address1: system.Location.Address1 when system.Location.Address1 != null otherwise "",
+				Address2: system.Location.Address2 when system.Location.Address2 != null otherwise "",
+				Address3: system.Location.Address3 when system.Location.Address3 != null otherwise "",
+				Address4: system.Location.Address4 when system.Location.Address4 != null otherwise "",
+				City: system.Location.City when system.Location.City != null otherwise "",
+				StateProvince: system.Location.StateProvince when system.Location.StateProvince != null otherwise "",
+				Country: system.Location.Country when system.Location.Country != null otherwise "",
+				PostalCode: system.Location.PostalCode when system.Location.PostalCode != null otherwise ""
+			},
+			Entitlements: {
+				Entitlement: [] when system.Entitlements.Entitlement == null otherwise system.Entitlements.Entitlement map ((entitlement , indexOfEntitlement) -> {
+					Service_Description: entitlement.ServiceSKU when entitlement.ServiceSKU != null otherwise "",
+					Service_SLA: entitlement.Service_Description when entitlement.Service_Description != null otherwise "",
+					Converge_Start_Date: entitlement.Service_SLA when entitlement.Service_SLA != null otherwise "",
+					Coverage_Start_Date: entitlement.Converge_Start_Date when entitlement.Converge_Start_Date != null otherwise "",
+					Coverage_End_Date: entitlement.Coverage_End_Date when entitlement.Coverage_End_Date != null otherwise ""
+				})
+			},
+			BOMList: {
+				Item: [] when system.BOMList.Item == null otherwise system.BOMList.Item map ((item , indexOfItem) -> {
+					Part_Number: item.Part_Number when item.Part_Number != null otherwise "",
+					Part_Description: item.Part_Description when item.Part_Description != null otherwise "",
+					Quantity: item.Quantity when item.Quantity != null otherwise ""
+				})
+			}
+		})
+	}
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <set-session-variable variableName="sv_current_system_entitlement" value="#[message.payloadAs(java.lang.String)]" doc:name="sv_current_system_entitlement"/>
+        <logger message="Invoke to Create the Entitlement" level="INFO" doc:name="Invoke to Create the Entitlement"/>
+        <expression-component doc:name="Set Error Var"><![CDATA[sessionVars.system_entitlement_message = "Failed to create Entitlement for Salesforce";]]></expression-component>
+        <http:request config-ref="HTTP_Request_Configuration_Salesforce" path="${salesforce.path}" method="POST" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Content-Type" value="${format}"/>
+                <http:header headerName="Accept" value="${format}"/>
+                <http:header headerName="Authorization" value="${authorization_sf}"/>
+
+            </http:request-builder>
+        </http:request>
+        <exception-strategy ref="systemEntitlementCatch_Exception_Strategy" doc:name="Reference Exception Strategy"/>
+
+    </flow> 
+</mule>

@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:dynamicscrm="http://www.mulesoft.org/schema/mule/dynamicscrm" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/dynamicscrm http://www.mulesoft.org/schema/mule/dynamicscrm/current/mule-dynamicscrm.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+
+  <flow name="rma-info-queue-to-crmFlow" processingStrategy="synchronous" initialState="started">
+    <jms:inbound-endpoint queue="${rma.info_queue}" connector-ref="Active_MQ" doc:name="rma_info_queue">
+      <jms:transaction action="ALWAYS_BEGIN"/>
+    </jms:inbound-endpoint>
+    <set-variable variableName="msgId" value="#[message.id]" doc:name="Set Message Id"/>
+    <logger message="RMA Queue to CRM Integration Service started" level="INFO" doc:name="RMA to CRM Log"/>
+    <enricher target="#[flowVars.resp1]" doc:name="Message Enricher">
+      <processor-chain doc:name="Processor Chain">
+        <expression-component doc:name="Set TransactionLogEntry values">
+          <![CDATA[java.util.Date today = new java.util.Date();
+java.util.Map txnObj=new java.util.HashMap();
+txnObj.put("transactionId",flowVars.msgId);
+txnObj.put("serviceName","RMA Info QUEUE to CRM Service");
+txnObj.put("timestamp",new java.sql.Timestamp(today.getTime()));
+
+payload=txnObj;
+return payload;]]>
+        </expression-component>
+        <jms:outbound-endpoint queue="TransactionLogEntry" connector-ref="Active_MQ" doc:name="TransactionLogEntry"/>
+      </processor-chain>
+    </enricher>
+    <expression-component doc:name="Set Error Var">
+      <![CDATA[sessionVars.code="101";
+sessionVars.message="RMA Queue to CRM : Bad request received from queue to CRM service";
+sessionVars.serviceName="RMA Info Queue to CRM Service";
+sessionVars.queuePayload=message.payloadAs(java.lang.String);
+sessionVars.flowName=flow.name;]]>
+    </expression-component>
+
+    <!-- <json:json-to-object-transformer returnClass="java.util.HashMap" doc:name="JSON to Object"/> -->
+
+    <set-session-variable variableName="sv_rma_info" value="#[payload]" doc:name="sv_rma_info"/>
+    <expression-transformer expression="#[payload.Request_Items]" doc:name="Segregate RMA Request_Items"/>
+    <flow-ref name="rma-info-queue-to-crmSub_Flow" doc:name="rma-info-queue-to-crmSub_Flow"/>
+    <enricher target="#[flowVars.resp2]" doc:name="Message Enricher">
+      <processor-chain doc:name="Processor Chain">
+        <expression-component doc:name="Set TransactionLog Update Values">
+          <![CDATA[java.util.Date today = new java.util.Date();
+java.util.Map txnObj=new java.util.HashMap();
+txnObj.put("transactionId",flowVars.msgId);
+txnObj.put("statusCode","3");
+txnObj.put("timestamp",new java.sql.Timestamp(today.getTime()));
+
+payload=txnObj;
+
+return payload;]]>
+        </expression-component>
+        <jms:outbound-endpoint queue="TransactionLogUpdate" connector-ref="Active_MQ" doc:name="TransactionLogUpdate"/>
+      </processor-chain>
+    </enricher>
+    <expression-component doc:name="Set Success Var">
+      <![CDATA[sessionVars.code="104";
+sessionVars.message="RMA to CRM service processed successfully for the Account Number "+sessionVars.sv_rma_info.customer_number;]]>
+    </expression-component>
+    <flow-ref name="globalSub_Flow" doc:name="globalSub_Flow"/>
+    <exception-strategy ref="globalCatch_Exception_Strategy" doc:name="Reference Exception Strategy"/>
+  </flow>
+  <sub-flow name="rma-info-queue-to-crmSub_Flow">
+    <set-variable variableName="crmNote" value="#[new java.util.ArrayList()]" doc:name="List Object Variable to add Notes"/>
+    <expression-component doc:name="Set Error Var">
+      <![CDATA[sessionVars.code="103";
+sessionVars.message="RMA Queue to CRM : Account Id verification service got failed for the Account Number "+sessionVars.sv_rma_info.customer_number;
+sessionVars.flowName="lookup-AccountId";]]>
+    </expression-component>
+    <enricher target="#[flowVars.crmAccountId]" doc:name="Message Enricher">
+      <flow-ref name="lookup-AccountId" doc:name="lookup-AccountId"/>
+    </enricher>
+    <expression-component doc:name="Set Error Var">
+      <![CDATA[
+sessionVars.message="RMA Queue to CRM : Contact email varification or creation of the new Contact service got failed for the Account Number "+sessionVars.sv_rma_info.customer_number;
+sessionVars.flowName="lookup-EmailVerify-Contact";]]>
+    </expression-component>
+    <enricher target="#[flowVars.crmContactId]" doc:name="Message Enricher">
+      <flow-ref name="lookup-EmailVerify-Contact" doc:name="lookup-EmailVerify-Contact"/>
+    </enricher>
+    <expression-component doc:name="Set Error Var">
+      <![CDATA[
+sessionVars.message="RMA Queue to CRM : Serial Number verification service got failed for the Account Number "+sessionVars.sv_rma_info.customer_number;
+sessionVars.flowName="lookup-SerialNumber";]]>
+    </expression-component>
+    <enricher target="#[flowVars.crmSerialNumber]" doc:name="Message Enricher">
+      <flow-ref name="lookup-SerialNumber" doc:name="lookup-SerialNumber"/>
+    </enricher>
+    <expression-component doc:name="Set Error Var">
+      <![CDATA[
+sessionVars.message="RMA Queue to CRM : Default Domain User Id fetch service got failed for the Account Number "+sessionVars.sv_rma_info.customer_number;
+sessionVars.flowName="lookup-defaultDomainUser";]]>
+    </expression-component>
+    <enricher target="#[flowVars.defaultDomainUser]" doc:name="Message Enricher">
+      <flow-ref name="lookup-defaultDomainUser" doc:name="lookup-defaultDomainUser"/>
+    </enricher>
+    <expression-component doc:name="Set Error Var">
+      <![CDATA[sessionVars.message="RMA Queue to CRM : The creation of Case in CRM got failed for the Account Number "+sessionVars.sv_rma_info.customer_number;
+sessionVars.flowName="rma-info-queue-to-crm-CASE";]]>
+    </expression-component>
+    <enricher target="#[flowVars.crmCaseId]" doc:name="Message Enricher">
+      <flow-ref name="rma-info-queue-to-crm-CASE" doc:name="rma-info-queue-to-crm-CASE"/>
+    </enricher>
+    <expression-component doc:name="Set Error Var">
+      <![CDATA[sessionVars.message="RMA Queue to CRM : The creation of RMA in CRM got failed for the Account Number "+sessionVars.sv_rma_info.customer_number;
+sessionVars.flowName="rma-info-queue-to-crm-RMA";]]>
+    </expression-component>
+    <enricher target="#[flowVars.crmRMAId]" doc:name="Message Enricher">
+      <flow-ref name="rma-info-queue-to-crm-RMA" doc:name="rma-info-queue-to-crm-RMA"/>
+    </enricher>
+    <choice doc:name="Validate Payload is not empty">
+      <when expression="#[payload.size()!=0]">
+        <foreach doc:name="For Each">
+          <expression-component doc:name="Set Error Var">
+            <![CDATA[
+sessionVars.message="RMA Queue to CRM : The creation of new RMA Item in CRM got failed for the Account Number "+sessionVars.sv_rma_info.customer_number;
+sessionVars.flowName="rma-info-queue-to-crm-RMAItem";]]>
+          </expression-component>
+          <enricher target="#[flowVars.crmRMAItemId]" doc:name="Message Enricher">
+            <flow-ref name="rma-info-queue-to-crm-RMAIteam" doc:name="rma-info-queue-to-crm-RMAIteam"/>
+          </enricher>
+
+          <!-- <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="dsql:" doc:name="CRM - CASE - Create"/> -->
+        </foreach>
+
+      </when>
+      <otherwise>
+        <logger message="No record existed for creating the new RMA Item" level="INFO" doc:name="No RMA Items"/>
+        <expression-component doc:name="Set NoRecord Var"><![CDATA[sessionVars.message="No record existed for creating the new RMA Item";]]></expression-component>
+      </otherwise>
+    </choice>
+    <expression-component doc:name="Set Error Var">
+      <![CDATA[sessionVars.message="RMA Queue to CRM : The creation of new Note entity in CRM got failed for the Account Number "+sessionVars.sv_rma_info.customer_number;
+sessionVars.flowName="rma-info-queue-to-crm-Note";]]>
+    </expression-component>
+    <flow-ref name="rma-info-queue-to-crm-Note" doc:name="rma-info-queue-to-crm-Note"/>
+  </sub-flow>
+
+  <sub-flow name="rma-info-queue-to-crm-CASE">
+    <set-variable variableName="fv_bom_file_url" value="${bom_file_url}" doc:name="fv_bom_file_url"/>
+    <dw:transform-message doc:name="Transform Message">
+      <dw:input-payload mimeType="application/java"/>
+      <dw:set-payload>
+        <![CDATA[%dw 1.0
+%output application/java
+---
+{
+	  caseorigincode : 100000007
+	, new_webformsource : 279640001 when sessionVars.sv_rma_info.site_id == "15" otherwise 279640000
+	, title : "Partnerlink RMA Request"
+	, casetypecode : 3
+	, primarycontactid_referenceto_contact : flowVars.crmContactId when flowVars.crmContactId != null otherwise ""
+	, am_customerid_contact_referenceto_contact: flowVars.crmContactId when flowVars.crmContactId != null otherwise ""
+	, new_casenotes: sessionVars.sv_rma_info.problem_description when sessionVars.sv_rma_info.problem_description != null otherwise ""
+	, customerid_referenceto_account : flowVars.crmAccountId when flowVars.crmAccountId != null otherwise ""
+	, new_claimponumber: sessionVars.sv_rma_info.contact_info.po_number when sessionVars.sv_rma_info.contact_info.po_number != null otherwise ""
+	, new_requestedby :sessionVars.sv_rma_info.rma_request_name when sessionVars.sv_rma_info.rma_request_name != null otherwise ""
+	, new_ghostedby :sessionVars.sv_rma_info.internal_name when sessionVars.sv_rma_info.internal_name != null otherwise ""
+	, statuscode :1
+	, ownerid_referenceto_systemuser: flowVars.defaultDomainUser.systemuserid when flowVars.defaultDomainUser.systemuserid != null otherwise ""
+	, new_customernumber : sessionVars.sv_rma_info.customer_number when sessionVars.sv_rma_info.customer_number != null otherwise ""
+	, new_serialnumberid_referenceto_amc_serialnumber : flowVars.crmSerialNumber.amc_serialnumberid when flowVars.crmSerialNumber.amc_serialnumberid != null otherwise ""
+	, am_systemserialnumber : flowVars.crmSerialNumber.amc_name when flowVars.crmSerialNumber.amc_name != null otherwise ""
+	
+	, new_productcategory : flowVars.crmSerialNumber.new_gorderprodcat
+	, am_originalsalesordernumber : flowVars.crmSerialNumber.new_salesordernumber
+	, new_originalsalesoredernumberurl : (flowVars.fv_bom_file_url ++ sessionVars.sv_rma_info.system_serial_number) when sessionVars.sv_rma_info.system_serial_number != null otherwise ""
+	, new_originalsalesbranch : flowVars.crmSerialNumber.new_originalsalesbranch
+	, new_originalbuildbranch : flowVars.crmSerialNumber.new_originalbuildbranch
+	, new_originalinvoicedate : flowVars.crmSerialNumber.new_dateinvoice as :datetime when flowVars.crmSerialNumber.new_dateinvoice != "" otherwise null
+	, new_originalsospponumber : flowVars.crmSerialNumber.new_originalsospponumber
+
+
+}]]>
+      </dw:set-payload>
+    </dw:transform-message>
+
+    <dynamicscrm:create config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" logicalName="incident" doc:name="Create Case in CRM"/>
+
+
+  </sub-flow>
+  <sub-flow name="rma-info-queue-to-crm-RMA">
+
+    <dw:transform-message doc:name="Transform Message">
+      <dw:input-payload mimeType="application/java"/>
+      <dw:set-payload>
+        <![CDATA[%dw 1.0
+%output application/java
+---
+using(
+	caseTicketNumber = lookup("lookup-caseTicketNumber", {
+	crmCaseId: flowVars.crmCaseId
+})
+)
+using(
+	countryAttributeValue = lookup("lookup-CountryAttributeValue", {
+	CountryCode: sessionVars.sv_rma_info.shipping_address.country_code
+})
+)
+{
+		amc_name :"Partnerlink RMA Request",
+		amc_case_referenceto_incident : flowVars.crmCaseId when flowVars.crmCaseId != null otherwise "",
+		ownerid_referenceto_systemuser: flowVars.defaultDomainUser.systemuserid when flowVars.defaultDomainUser.systemuserid != null otherwise "",
+		new_ticketnumber: caseTicketNumber.ticketnumber when caseTicketNumber.ticketnumber != null otherwise "",
+		am_rmacontact_referenceto_contact :flowVars.crmContactId when flowVars.crmContactId != null otherwise "",
+		new_email: sessionVars.sv_rma_info.contact_info.contact_email when sessionVars.sv_rma_info.contact_info.contact_email != null otherwise "",
+		new_emailcc : sessionVars.sv_rma_info.contact_info.emailcc when sessionVars.sv_rma_info.contact_info.emailcc != null otherwise "",
+		am_customerponumber :sessionVars.sv_rma_info.contact_info.po_number when sessionVars.sv_rma_info.contact_info.po_number != null otherwise "",		
+		am_billtoaccount_referenceto_account : flowVars.crmAccountId when flowVars.crmAccountId != null otherwise "",
+		new_billtoaccountnumber  :sessionVars.sv_rma_info.customer_number when sessionVars.sv_rma_info.customer_number != null otherwise "",
+		new_companyname :sessionVars.sv_rma_info.shipping_address.address_company_name when sessionVars.sv_rma_info.shipping_address.address_company_name != null otherwise "",
+		amc_street1 : sessionVars.sv_rma_info.shipping_address.address_line_1 when sessionVars.sv_rma_info.shipping_address.address_line_1 != null otherwise "",
+		amc_street2 : sessionVars.sv_rma_info.shipping_address.address_line_2 when sessionVars.sv_rma_info.shipping_address.address_line_2 != null otherwise "",
+		am_street3 : sessionVars.sv_rma_info.shipping_address.address_line_3 when sessionVars.sv_rma_info.shipping_address.address_line_3 != null otherwise "",
+		am_street4 : sessionVars.sv_rma_info.shipping_address.address_line_4 when sessionVars.sv_rma_info.shipping_address.address_line_4 != null otherwise "",
+		amc_city : sessionVars.sv_rma_info.shipping_address.city when sessionVars.sv_rma_info.shipping_address.city != null otherwise "",		
+		amc_state : sessionVars.sv_rma_info.shipping_address.state when sessionVars.sv_rma_info.shipping_address.state != null otherwise "",
+		amc_zip : sessionVars.sv_rma_info.shipping_address.postal_code when sessionVars.sv_rma_info.shipping_address.postal_code != null otherwise "",
+		new_country : countryAttributeValue.CountryAttribute when countryAttributeValue.CountryAttribute != null otherwise "",
+		new_requestedby :sessionVars.sv_rma_info.rma_request_name when sessionVars.sv_rma_info.rma_request_name != null otherwise "",
+		new_ghostedby :sessionVars.sv_rma_info.internal_name when sessionVars.sv_rma_info.internal_name != null otherwise "",
+		new_customeractionrequested : 279640000 when (sessionVars.sv_rma_info.action_request == null or sessionVars.sv_rma_info.action_request == "") otherwise									  
+									  279640000 when (upper sessionVars.sv_rma_info.action_request) == "SHIP SYSTEM IN FOR EQUUS REPAIR" otherwise
+									  279640001 when (upper sessionVars.sv_rma_info.action_request) == "SHIP PARTS OUT FOR CUSTOMER REPAIR" otherwise
+                                      279640002 when (upper sessionVars.sv_rma_info.action_request) == "CREDIT RETURN (BY EQUUS APPROVAL ONLY)" otherwise
+                                      279640003 when (upper sessionVars.sv_rma_info.action_request) == "SHIP SYSTEM IN FOR OUT OF WARRANTY REPAIR" otherwise "",
+		new_reportedsymptomdescription : sessionVars.sv_rma_info.problem_description when sessionVars.sv_rma_info.problem_description != null otherwise "",
+		new_serialnumberid: flowVars.crmSerialNumber.amc_serialnumberid,
+		new_holdforwillcallpickup : sessionVars.sv_rma_info.will_call as :boolean when sessionVars.sv_rma_info.will_call != null otherwise false
+}]]>
+      </dw:set-payload>
+    </dw:transform-message>
+
+    <dynamicscrm:create config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" logicalName="amc_rma" doc:name="Create RMA in CRM"/>
+
+
+
+  </sub-flow>
+  <sub-flow name="rma-info-queue-to-crm-RMAIteam">
+
+    <dw:transform-message doc:name="Transform Message" metadata:id="2d748eed-9c5f-433d-b76f-40956b4925f3">
+      <dw:input-payload mimeType="application/java"/>
+      <dw:set-payload>
+        <![CDATA[%dw 1.0
+%output application/java
+---
+{
+	ownerid_referenceto_systemuser: flowVars.defaultDomainUser.systemuserid when flowVars.defaultDomainUser.systemuserid != null otherwise "",
+	new_partnumber: "0" when (payload.part_number == null or payload.part_number == "")  otherwise payload.part_number,
+	new_component_system_serial_number: sessionVars.sv_rma_info.system_serial_number when sessionVars.sv_rma_info.system_serial_number != null otherwise "",
+	new_rma_referenceto_amc_rma: flowVars.crmRMAId,
+	new_description: payload.product_description when payload.product_description != null otherwise ""
+}]]>
+      </dw:set-payload>
+    </dw:transform-message>
+
+    <dynamicscrm:create config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" logicalName="new_rmarequesteditem" doc:name="Create RMA Item in CRM"/>
+
+  </sub-flow>
+  <sub-flow name="rma-info-queue-to-crm-Note">
+    <expression-component doc:name="Set the Note to Payload">
+      <![CDATA[String listNote = flowVars.crmNote.toString();
+
+String replaceStr=listNote.replaceAll("\\[|\\]", "");
+return payload=replaceStr;]]>
+    </expression-component>
+    <dw:transform-message doc:name="Transform Message">
+      <dw:input-payload mimeType="application/java"/>
+      <dw:set-payload>
+        <![CDATA[%dw 1.0
+%output application/java
+---
+{
+      notetext: 'RMA to Case Call Note ' ++ trim payload as :string,
+      objecttypecode : 112,
+      mimetype: 'text/plain',      
+      isdocument: true,
+      ownerid_referenceto_systemuser: flowVars.defaultDomainUser.systemuserid,
+      objectid_referenceto_incident: flowVars.crmCaseId
+     
+
+}]]>
+      </dw:set-payload>
+    </dw:transform-message>
+    <dynamicscrm:create config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" logicalName="annotation" doc:name="Create new Note in CRM Case"/>
+  </sub-flow>
+</mule>

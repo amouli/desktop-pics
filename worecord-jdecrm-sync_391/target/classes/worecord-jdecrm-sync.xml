@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" 
+      xmlns:dynamicscrm="http://www.mulesoft.org/schema/mule/dynamicscrm"
+      xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw"
+      xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata"
+      xmlns:json="http://www.mulesoft.org/schema/mule/json"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+    xmlns:spring="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/dynamicscrm http://www.mulesoft.org/schema/mule/dynamicscrm/current/mule-dynamicscrm.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+    
+
+            
+ <flow name="worecord-jdecrm-syncFlow" initialState="started" processingStrategy="synchronous">
+        
+     <poll doc:name="Poll">
+      <fixed-frequency-scheduler frequency="2" timeUnit="HOURS"/>
+      <watermark variable="lastRun_new" default-expression="#[server.dateTime.plusDays(-1)]" update-expression="#[flowVars.request_end_time]"/>
+      <processor-chain doc:name="Processor Chain">
+
+
+        <choice doc:name="Check last run date">
+          <when expression="#[ flowVars.lastRun_new &lt; server.dateTime.plusDays(-1)]">
+
+
+            <set-variable variableName="request_start_time_format" value="#[new java.text.SimpleDateFormat('yyyy-MM-dd').format(flowVars.lastRun_new.toDate())]" doc:name="Set Start Time Format"/>
+
+            <set-variable variableName="request_end_time" value="#[flowVars.lastRun_new.plusDays(1)]" doc:name="Set EndTime"/>
+            <set-variable variableName="request_end_time_format" value="#[new java.text.SimpleDateFormat('yyyy-MM-dd').format(flowVars.request_end_time.toDate())]" doc:name="Set EndTime format"/>
+
+            <logger message="1.pulling records from #[flowVars.request_start_time_format]  to  #[flowVars.request_end_time_format]" level="INFO" doc:name="Request Period Infomation"/>
+            <http:request config-ref="HTTP_Request_Configuration" path="${api.path}" method="GET" doc:name="Invoke JDE SerialList"/>
+          </when>
+          <otherwise>
+            <set-variable variableName="request_start_time_format" value="#[new java.text.SimpleDateFormat('yyyy-MM-dd').format(flowVars.lastRun_new.toDate())]" doc:name="Set Start Time format"/>
+            <set-variable variableName="request_end_time" value="#[flowVars.lastRun_new]" doc:name="Set EndTime"/>
+            <set-variable variableName="request_end_time_format" value="#[new java.text.SimpleDateFormat('yyyy-MM-dd').format(new java.util.Date())]" doc:name="Set EndTime format"/>
+            <logger message="2.pulling records from #[flowVars.request_start_time_format]  to  #[flowVars.request_end_time_format]" level="INFO" doc:name="Request Period Infomation"/>
+            <http:request config-ref="HTTP_Request_Configuration" path="${api.path}" method="GET" doc:name="Invoke JDE SerialList"/>
+          </otherwise>
+        </choice>
+
+      </processor-chain>
+    </poll>  
+       <set-variable variableName="msgId" value="#[message.id]" doc:name="Set Message Id"/>
+
+        <async doc:name="Async">
+            <expression-component doc:name="Set TransactionLogEntry values">
+            <![CDATA[java.util.Date today = new java.util.Date();
+java.util.Map txnObj=new java.util.HashMap();
+txnObj.put("transactionId",flowVars.msgId);
+txnObj.put("serviceName","JDE SystemSerialList to QUEUE");
+txnObj.put("timestamp",new java.sql.Timestamp(today.getTime()));
+
+payload=txnObj;
+return payload;]]>
+        </expression-component>
+            <jms:outbound-endpoint queue="TransactionLogEntry" connector-ref="Active_MQ" doc:name="TransactionLogEntry"/>
+        </async>
+        <expression-component doc:name="Set Error Var">
+           <![CDATA[sessionVars.code="101";
+sessionVars.message="Bad request received from JDE System Serial List API to Queue service";
+sessionVars.serviceName="JDE SerialNumberService API to QUEUE";
+sessionVars.flowName=flow.name;
+sessionVars.queuePayload="From JDE API, Received Payload got failed";
+sessionVars.exceptionCausedPayload= "$ No Payload $";]]>
+      </expression-component>
+        <flow-ref name="worecord-jdecrm-syncSub_Flow" doc:name="worecord-jdecrm-syncSub_Flow"/>
+
+	<async doc:name="Async">
+            <expression-component doc:name="Set TransactionLog Update Values">
+                 <![CDATA[java.util.Date today = new java.util.Date();
+java.util.Map txnObj=new java.util.HashMap();
+txnObj.put("transactionId",flowVars.msgId);
+txnObj.put("statusCode","3");
+txnObj.put("timestamp",new java.sql.Timestamp(today.getTime()));
+
+payload=txnObj;
+
+return payload;]]>
+          </expression-component>
+            <jms:outbound-endpoint queue="TransactionLogUpdate" connector-ref="Active_MQ" doc:name="TransactionLogUpdate"/>
+        </async>
+        <flow-ref name="globalSub_Flow" doc:name="globalSub_Flow"/>
+    <set-variable variableName="request_end_time" value="#[flowVars.lastRun_new]" doc:name="Set Last Run"/>
+        <exception-strategy ref="globalCatch_Exception_Strategy" doc:name="Reference Exception Strategy"/>
+
+
+  </flow>
+    <sub-flow name="worecord-jdecrm-syncSub_Flow">
+        <dw:transform-message doc:name="Transform Payload for Split" metadata:id="3870685e-43eb-48e9-8767-6099e28d69be">
+            <dw:input-payload doc:sample="sample_data\json.json" mimeType="application/json"/>
+            <dw:set-payload>
+               <![CDATA[%dw 1.0
+%output application/json skipNullOn="everywhere"
+---
+payload.Data map ((datum , indexOfDatum) -> {
+    Record: {
+        SDDOCO: datum.SDDOCO,
+        SDDCTO: trim datum.SDDCTO when datum.SDDCTO != null otherwise "",
+        SDAN8: datum.SDAN8,
+        SDLNTY: trim datum.SDLNTY when datum.SDLNTY != null otherwise "",
+        SDLITM: trim datum.SDLITM when datum.SDLITM != null otherwise "",
+        SDDSC1: trim datum.SDDSC1 when datum.SDDSC1 != null otherwise "",
+        SDDSC2: trim datum.SDDSC2 when datum.SDDSC2 != null otherwise "",
+        WADOCO: datum.WADOCO,
+        SDIVD:  null when datum.SDIVD == "" otherwise datum.SDIVD,        
+        SDLNID : datum.SDLNID,
+        SDSRP3 : trim datum.SDSRP3 when datum.SDSRP3 != null otherwise "",
+        SDEMCU : trim datum.SDEMCU when datum.SDEMCU != null otherwise "",
+        SDMCU  : trim datum.SDMCU when datum.SDMCU != null otherwise "",
+        ABALPH : trim datum.ABALPH when datum.ABALPH != null otherwise ""
+    }
+})
+]]>
+    </dw:set-payload>
+        </dw:transform-message>
+        <json:json-to-object-transformer returnClass="java.util.List" doc:name="JSON to Object"/>
+        <foreach doc:name="For Each">
+            <set-payload value="#[payload.Record]" doc:name="Set Record Payload"/>
+            <expression-component doc:name="Set Error Var">
+                <![CDATA[sessionVars.code="102";
+sessionVars.message="Failed to push the JDE System Serial Number map to queue for the Record Id :"+payload.WADOCO;
+sessionVars.flowName="worecord-jdecrm-syncSub_Flow";
+sessionVars.exceptionCausedPayload=payload;]]>
+       </expression-component>
+            <jms:outbound-endpoint queue="${serialnumber.single.queue}" connector-ref="Active_MQ" doc:name="Serial Number Single Queue"/>
+        </foreach>
+
+        <expression-component doc:name="Set Success Var">
+             <![CDATA[sessionVars.code="104";
+sessionVars.message="JDE System Serial Number API to Queue service processed successfully";]]>
+         </expression-component>
+    </sub-flow>
+
+
+</mule>

@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="localhost" port="8085" doc:name="HTTP Listener Configuration"/>
+    <flow name="rma-info-flow" processingStrategy="synchronous" initialState="started">
+        <!-- <http:listener config-ref="HTTP_Listener_Configuration" path="/" doc:name="HTTP"/> -->
+        <poll doc:name="Poll">
+            <fixed-frequency-scheduler frequency="5" timeUnit="MINUTES"/>
+            <watermark variable="fv_lastRunRMAId" default-expression="#['1']" update-expression="#[flowVars.fv_RMA_last_rmaid]"/>
+            <processor-chain doc:name="Processor Chain">
+                <logger message="RMA API to QUEUE Service Started with RMAID :: #[flowVars.fv_lastRunRMAId]" level="INFO" doc:name="Service Started Log"/>
+                <expression-component doc:name="Set Error Var "><![CDATA[sessionVars.code="103";
+sessionVars.message="Failed the Call RMA Info API in RMA Info to Queue service ";
+sessionVars.serviceName="RMA INFO to QUEUE SERVICE";
+sessionVars.flowName=flow.name;]]></expression-component>
+                                <set-payload value="{&quot;rma_id&quot;:#[flowVars.fv_lastRunRMAId],&quot;op&quot;:&quot;Greater&quot;,&quot;rows_per_page&quot;:50,&quot;page_number&quot;:1}" doc:name="Set Http Request Body"/>
+                <http:request config-ref="HTTP_Request_Configuration" path="${api.path.rmainfo}" method="POST" doc:name="Call RMAInfo API">
+                    <http:request-builder>
+                        <http:header headerName="AppID" value="${api.appID}"/>
+                        <http:header headerName="AppPwd" value="${api.appPwd}"/>
+                        <http:header headerName="Content-Type" value="${api.contentType}"/>
+                    </http:request-builder>
+                </http:request>
+            </processor-chain>
+        </poll>
+        <logger message="=====Rma list==#[payload]" level="INFO" doc:name="Logger"/>
+        <set-variable variableName="msgid" value="#[message.id]" doc:name="Set Message Id"/>
+        <async doc:name="Async">
+            <expression-component doc:name="Set TransactionLogEntry values"><![CDATA[java.util.Date today = new java.util.Date();
+java.util.Map txnObj=new java.util.HashMap();
+txnObj.put("transactionId",flowVars.msgId);
+txnObj.put("serviceName","RMA INFO to QUEUE");
+txnObj.put("timestamp",new java.sql.Timestamp(today.getTime()));
+
+payload=txnObj;
+return payload;]]></expression-component>
+            <jms:outbound-endpoint queue="TransactionLogEntry" connector-ref="Active_MQ" doc:name="TransactionLogEntry"/>
+        </async>
+        <expression-component doc:name="Set Error Var"><![CDATA[sessionVars.code="101";
+sessionVars.message="RMA to Queue : Bad Input received from the RMA Info API ";
+sessionVars.serviceName="RMA INFO to QUEUE SERVICE";
+sessionVars.flowName=flow.name;]]></expression-component>
+        <dw:transform-message doc:name="Transform Message" metadata:id="d199839e-0044-4f94-83ae-62205726185a">
+            <dw:input-payload doc:sample="sample_data\json.json" mimeType="application/json"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json skipNullOn = "everywhere"
+---
+{
+	RMA_list: payload.RMA_list map ((rMAlist , indexOfRMAlist) -> {
+		Request_Items: rMAlist.Request_Items map ((requestItem , indexOfRequestItem) -> {
+			action: requestItem.action,
+			description: requestItem.description,
+			is_component: requestItem.is_component,
+			order_date: requestItem.order_date,
+			oreder_number: requestItem.order_number,
+			part_number: requestItem.part_number,
+			product_code: requestItem.product_code,
+			product_description: trim requestItem.product_description when requestItem.product_description != null otherwise "",
+			rma_id: requestItem.rma_id,
+			rma_type: requestItem.rma_type,
+			serial_number: requestItem.serial_number
+		}),
+		action_request: rMAlist.action_request,
+		comments: rMAlist.comments,
+		contact_info: {
+			contact_email: rMAlist.contact_info.contact_email,
+			contact_name: rMAlist.contact_info.contact_name,
+			contact_phone: rMAlist.contact_info.contact_phone,
+			emailcc: rMAlist.contact_info.emailcc,
+			po_number: rMAlist.contact_info.po_number
+		},
+		create_date: rMAlist.create_date,
+		customer_number: rMAlist.customer_number,
+		order_number: rMAlist.order_number,
+		original_po_number: rMAlist.original_po_number,
+		problem_description: rMAlist.problem_description,
+		rma_id: rMAlist.rma_id,
+		rma_request_email: rMAlist.rma_request_email,
+		rma_request_name: rMAlist.rma_request_name,
+		internal_name: rMAlist.internal_name,
+		site_id: rMAlist.site_id,
+		shipping_address: {
+			address_company_name: rMAlist.shipping_address.address_company_name,
+			address_line_1: rMAlist.shipping_address.address_line_1,
+			address_line_2: rMAlist.shipping_address.address_line_2,
+			address_line_3: rMAlist.shipping_address.address_line_3,
+			address_line_4: rMAlist.shipping_address.address_line_4,
+			city: rMAlist.shipping_address.city,
+			country: rMAlist.shipping_address.country,
+			country_code: rMAlist.shipping_address.country_code,
+			postal_code: rMAlist.shipping_address.postal_code,
+			state: rMAlist.shipping_address.state
+		},
+		system_serial_number: rMAlist.system_serial_number,
+		web_user_id: rMAlist.web_user_id,
+		will_call: rMAlist.will_call
+	})
+}]]></dw:set-payload>
+        </dw:transform-message>
+
+        <json:json-to-object-transformer returnClass="java.util.LinkedHashMap" doc:name="JSON to Object List"/>
+
+        <expression-transformer expression="#[payload.RMA_list]" doc:name="Segregate RMA List Payload"/>
+        <flow-ref name="rma-infoSub_Flow" doc:name="rma-infoSub_Flow"/>
+        <async doc:name="Async">
+            <expression-component doc:name="Set TransactionLog Update Values"><![CDATA[java.util.Date today = new java.util.Date();
+java.util.Map txnObj=new java.util.HashMap();
+txnObj.put("transactionId",flowVars.msgId);
+txnObj.put("statusCode","3");
+txnObj.put("timestamp",new java.sql.Timestamp(today.getTime()));
+
+payload=txnObj;
+
+return payload;]]></expression-component>
+            <jms:outbound-endpoint queue="TransactionLogUpdate" connector-ref="Active_MQ" doc:name="TransactionLogUpdate"/>
+        </async>
+        <flow-ref name="globalSub_Flow" doc:name="globalSub_Flow"/>
+        <exception-strategy ref="globalCatch_Exception_Strategy" doc:name="Reference Exception Strategy"/>
+    </flow>
+    <sub-flow name="rma-infoSub_Flow">
+        <choice doc:name="Check if payload is not empty">
+            <when expression="#[payload.size() &gt; 0]">
+                <foreach doc:name="For Each" collection="#[payload]">
+                    <expression-component doc:name="Set Error Var"><![CDATA[sessionVars.code="103";
+sessionVars.message="RMA to Queue: Failed to push the RMA Info record to queue";
+sessionVars.flowName=flow.name;]]></expression-component>
+                    <set-variable doc:name="fv_RMA_last_rmaid" value="#[payload.rma_id]" variableName="fv_RMA_last_rmaid"/>
+                    <jms:outbound-endpoint queue="${rma.info_queue}" connector-ref="Active_MQ" doc:name="rma_info_queue"/>
+                    <expression-component doc:name="Set Success Var"><![CDATA[sessionVars.code="104";
+sessionVars.message="RMA Info to queue service processed successfully";]]></expression-component>
+                </foreach>
+            </when>
+            <otherwise>
+                <expression-component doc:name="Set NoRecord Var"><![CDATA[sessionVars.code="102";
+sessionVars.message="No records recevied from RMA API to QUEUE service";]]></expression-component>
+                <set-variable variableName="fv_RMA_last_rmaid" value="#[flowVars.fv_lastRunRMAId]" doc:name="fv_RMA_last_rmaid"/>
+            </otherwise>
+        </choice>
+    </sub-flow>
+</mule>

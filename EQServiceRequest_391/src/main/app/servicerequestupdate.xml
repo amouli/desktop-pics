@@ -1,0 +1,403 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:dynamicscrm="http://www.mulesoft.org/schema/mule/dynamicscrm"  xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:json="http://www.mulesoft.org/schema/mule/json"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw"
+	xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/dynamicscrm http://www.mulesoft.org/schema/mule/dynamicscrm/current/mule-dynamicscrm.xsd">
+
+
+  <flow name="Recursive_servicerequestFlow">
+    <choice doc:name="Check if last page reached">
+      <when expression="#[sessionVars.sv_total_pages_servicerequest &gt;= sessionVars.sv_total_pages_count]">
+        <logger message=" #['current page:  ' + sessionVars.sv_total_pages_servicerequest]" level="INFO" doc:name="Print current page number"/>
+        <flow-ref name="Messages_servicerequestFlow" doc:name="Messages_servicerequestFlow"/>
+      </when>
+      <otherwise>
+        <logger message="Last page reached, skip" level="INFO" doc:name="Last page reached, skip"/>
+      </otherwise>
+    </choice>
+  </flow>
+
+  <sub-flow name="Messages_servicerequestFlow">
+    <logger message="Call API to get data for current page" level="INFO" doc:name="Call API to get data for current page"/>
+    <http:request config-ref="HTTP_Request_Configuration" path="${api.path.getServiceRequestByDateRange}" method="GET" doc:name="HTTP Get">
+      <http:request-builder>
+        <http:query-param paramName="page" value="#[sessionVars.sv_total_pages_count]"/>
+        <http:query-param paramName="start" value="#[flowVars.fv_lastrun_servicerequest_update == null? flowVars.fv_lastrun_servicerequest:flowVars.fv_lastrun_servicerequest_update]"/>
+        <http:query-param paramName="end" value="${enddate}"/>
+      </http:request-builder>
+    </http:request> 
+    <dw:transform-message doc:name="Transform Message" metadata:id="9e201f34-9a13-4ec3-a209-92aec7584633">
+      <dw:input-payload mimeType="application/json" doc:sample="Updateservice.json"/>
+      <dw:set-payload>
+        <![CDATA[%dw 1.0
+%output application/json
+---
+payload.data map ((payload01 , indexOfPayload01) -> {
+   servicerequests: {
+			servicerequest_id: payload01.servicerequest_id,
+			created_on: payload01.created_on,
+			dispatch_number: payload01.dispatch_number,
+			FE_status: payload01.FE_status,
+			FE_completed_work_datetime_UTC: payload01.FE_completed_work_datetime_UTC,
+			primary_onsite_FE_email: payload01.primary_onsite_FE_email,
+			primary_onsite_FE_phone: payload01.primary_onsite_FE_phone,
+			primary_onsite_FE_name: payload01.primary_onsite_FE_name,
+			requested_FE_arrival_datetime_UTC: payload01.requested_FE_arrival_datetime_UTC,
+			scheduled_FE_arrival_datetime_UTC: payload01.scheduled_FE_arrival_datetime_UTC,
+			actual_FE_arrival_datetime_UTC: payload01.actual_FE_arrival_datetime_UTC,
+			FE_completed_work_summary_notes: payload01.FE_completed_work_summary_notes,
+			secondary_onsite_FE_name: payload01.secondary_onsite_FE_name,
+			secondary_onsite_FE_phone: payload01.secondary_onsite_FE_phone,
+			secondary_onsite_FE_email: payload01.secondary_onsite_FE_email,
+			rma_items: payload01.rma_items map ((payload02 , indexOfPayload02) -> {
+							rmaitem_id: payload02.rmaitem_id,
+							rma_item_id: payload02.rma_item_id,
+							mode_of_transportation: payload02.mode_of_transportation,
+							ship_date_UTC: payload02.ship_date_UTC,
+							carrier: payload02.carrier,
+							delivery_datetime_UTC: payload02.delivery_datetime_UTC,
+							tracking_number: payload02.tracking_number,
+							proof_of_delivery: payload02.proof_of_delivery
+			})
+	}
+})]]>
+      </dw:set-payload>
+    </dw:transform-message>
+    <json:json-to-object-transformer returnClass="java.util.List" doc:name="JSON to Object List"/>
+    <logger message="Start inserting Service Request messages to queue" level="INFO" doc:name="Start inserting Service Request messages to queue"/>
+    <foreach counterVariableName="servicerequest_count" doc:name="For Each">
+      <set-payload value="#[payload.servicerequests]" doc:name="Current Service Request"/>
+      <logger message="Record #[flowVars.servicerequest_count]:  #[payload]" level="INFO" doc:name="Current Record Info"/>
+      <jms:outbound-endpoint queue="${service_request_update_queue}" connector-ref="Active_MQ" doc:name="servicerequest_queue"/>
+      <set-session-variable variableName="sv_max_created_date" value="#[payload.created_on]" doc:name="sv_max_created_date"/>
+    </foreach>
+    <set-session-variable variableName="sv_total_pages_count" value="#[sv_total_pages_count ==  null ? 0 :  sv_total_pages_count + 1]" doc:name="sv_total_pages_count"/>
+    <flow-ref name="Recursive_servicerequestFlow" doc:name="Recursive_servicerequestFlow"/>
+  </sub-flow>
+
+
+  <flow name="servicerequestFlow" initialState="started" processingStrategy="synchronous">
+    <poll doc:name="Poll">
+      <fixed-frequency-scheduler frequency="1" timeUnit="HOURS" />
+      <watermark variable="fv_lastrun_servicerequest" default-expression="${startdate}" update-expression="#[flowVars.fv_lastrun_servicerequest_update]"/>
+      <processor-chain doc:name="Processor Chain">
+        <logger message="Start polling Service Request from API: Start = #[flowVars.fv_lastrun_servicerequest_update == null? flowVars.fv_lastrun_servicerequest:flowVars.fv_lastrun_servicerequest_update], End = ${enddate} " level="INFO" doc:name="Start polling Service Request from API"/>
+        <http:request config-ref="HTTP_Request_Configuration" path="${api.path.getServiceRequestByDateRange}" method="GET" doc:name="HTTP Get">
+          <http:request-builder>
+            <http:query-param paramName="page" value="1"/>
+            <http:query-param paramName="start" value="#[flowVars.fv_lastrun_servicerequest_update == null? flowVars.fv_lastrun_servicerequest:flowVars.fv_lastrun_servicerequest_update]"/>
+            <http:query-param paramName="end" value="${enddate}"/>
+
+
+          </http:request-builder>
+        </http:request>
+      </processor-chain>
+    </poll>
+
+    <logger message="Result from servicerequest API: #[payload] " level="INFO" doc:name="Result from servicerequest API"/>
+    <json:json-to-object-transformer returnClass="java.util.HashMap" doc:name="JSON to Hash Map"/>
+    <set-session-variable variableName="sv_total_pages_servicerequest" value="#[payload.total_pages]" doc:name="sv_total_pages_servicerequest"/>
+    <set-session-variable variableName="sv_total_pages_count" value="#[1]" doc:name="sv_total_pages_count"/>
+
+    <flow-ref name="Recursive_servicerequestFlow" doc:name="Recursive_servicerequestFlow"/>
+    <set-variable variableName="fv_lastrun_servicerequest_update" value="#[sessionVars.sv_max_created_date]" doc:name="fv_lastrun_servicerequest_update"/>
+    <logger message="Finished! WaterMark: #[flowVars.fv_lastrun_servicerequest_update]" level="INFO" doc:name="Finished!"/>
+    <exception-strategy ref="Catch_Exception_Handling1" doc:name="Reference Exception Strategy"/>
+  </flow>
+  <flow name="servicerequest_fromqueue_tocrm" initialState="started" processingStrategy="synchronous">
+    <jms:inbound-endpoint queue="${service_request_update_queue}" connector-ref="Active_MQ" doc:name="servicerequest_queue">
+      <jms:transaction action="ALWAYS_BEGIN"/>
+    </jms:inbound-endpoint>
+    <set-session-variable variableName="sv_crm_servicerequest" value="#[payload]" doc:name="sv_crm_servicerequest"/>
+    <set-session-variable variableName="sv_servicerequest" value="#[payload]" doc:name="sv_servicerequest"/>
+    <logger message="Get servicerequest from queue: #[payload]" level="INFO" doc:name="Get servicerequest from queue"/>
+    <enricher target="#[variable:srExists]" doc:name="srExists">
+      <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot; row=&quot;1&quot; &gt;
+    &lt;entity name=&quot;new_servicerequest&quot; &gt;
+        &lt;filter&gt;
+            &lt;condition attribute=&quot;new_equusdispatchnumber&quot; operator=&quot;eq&quot; value=&quot;#[payload.dispatch_number]&quot; /&gt;
+        &lt;/filter&gt;
+    &lt;/entity&gt;
+&lt;/fetch&gt;" doc:name="Query CRM Service Request"/>
+    </enricher>
+    <choice doc:name="Check if service request exists">
+      <when expression="#[srExists.hasNext() == true]">
+        <logger message="Service Request: #[sessionVars.sv_crm_servicerequest.dispatch_number] exists, continue" level="INFO" doc:name="Service Request exists, continue"/>
+        <set-variable variableName="fv_sr_info" value="#[srExists.next()]" doc:name="fv_sr_info"/>
+        <dw:transform-message doc:name="Transform Message">
+          <dw:input-payload mimeType="application/java"/>
+          <dw:set-payload>
+            <![CDATA[%dw 1.0
+%output application/java
+---
+{
+	
+new_fecompletedworksummarynotes: sessionVars.sv_crm_servicerequest.FE_completed_work_summary_notes,
+new_fecompleteddatetime: sessionVars.sv_crm_servicerequest.FE_completed_work_datetime_UTC as :datetime >> "America/Chicago"
+						when sessionVars.sv_crm_servicerequest.FE_completed_work_datetime_UTC != null and sessionVars.sv_crm_servicerequest.FE_completed_work_datetime_UTC != "" otherwise null,
+new_primaryonsitefeemail: sessionVars.sv_crm_servicerequest.primary_onsite_FE_email,
+new_primaryonsitefename: sessionVars.sv_crm_servicerequest.primary_onsite_FE_name,
+new_primaryonsitefephone: sessionVars.sv_crm_servicerequest.primary_onsite_FE_phone,
+new_requestedfelocalarrivaldatetime: sessionVars.sv_crm_servicerequest.requested_FE_arrival_datetime_UTC as :datetime >> "America/Chicago"
+									when sessionVars.sv_crm_servicerequest.requested_FE_arrival_datetime_UTC != null and sessionVars.sv_crm_servicerequest.requested_FE_arrival_datetime_UTC != "" otherwise null,
+new_scheduledfelocalarrivaldatetime: sessionVars.sv_crm_servicerequest.scheduled_FE_arrival_datetime_UTC as :datetime >> "America/Chicago"
+									when sessionVars.sv_crm_servicerequest.scheduled_FE_arrival_datetime_UTC != null and sessionVars.sv_crm_servicerequest.scheduled_FE_arrival_datetime_UTC != "" otherwise null,
+new_actualfelocalarrivaldatetime: sessionVars.sv_crm_servicerequest.actual_FE_arrival_datetime_UTC as :datetime >> "America/Chicago"
+									when sessionVars.sv_crm_servicerequest.actual_FE_arrival_datetime_UTC != null and sessionVars.sv_crm_servicerequest.actual_FE_arrival_datetime_UTC != "" otherwise null,
+new_secondaryonsitefeemail: sessionVars.sv_crm_servicerequest.secondary_onsite_FE_email,
+new_secondaryonsitefename: sessionVars.sv_crm_servicerequest.secondary_onsite_FE_name,
+new_secondaryonsitefephone: sessionVars.sv_crm_servicerequest.secondary_onsite_FE_phone,
+new_fieldengineerstatus: '279640007' when sessionVars.sv_crm_servicerequest.FE_status == 'Pending' otherwise
+						 '279640008' when sessionVars.sv_crm_servicerequest.FE_status == 'Sent to Source Support' otherwise
+						 '279640009' when sessionVars.sv_crm_servicerequest.FE_status == 'FE Checked-OUT from Onsite' otherwise
+						 '1' 		 when sessionVars.sv_crm_servicerequest.FE_status == 'OPEN' otherwise
+						 '279640000' when sessionVars.sv_crm_servicerequest.FE_status == 'DISP' otherwise
+						 '279640001' when sessionVars.sv_crm_servicerequest.FE_status == 'COMP' otherwise
+						 '279640002' when sessionVars.sv_crm_servicerequest.FE_status == 'CANCELED' otherwise
+						 '279640003' when sessionVars.sv_crm_servicerequest.FE_status == 'FE Pregame' otherwise
+						 '279640004' when sessionVars.sv_crm_servicerequest.FE_status == 'Ready for Onsite' otherwise
+						 '279640005' when sessionVars.sv_crm_servicerequest.FE_status == 'FE Checked-in Onsite' otherwise
+						 '279640006' when sessionVars.sv_crm_servicerequest.FE_status == 'FE Checked-In Equipment' otherwise '' // when nothing else match, default it to blank
+
+
+
+
+
+}
+
+]]>
+          </dw:set-payload>
+        </dw:transform-message>
+        <choice doc:name="Check if FE status is found">
+          <when expression="#[payload.new_fieldengineerstatus == '' &amp;&amp; sessionVars.sv_crm_servicerequest.FE_status != null]">
+            <logger message="FE Status Not Found, create note to inform user" level="INFO" doc:name="FE Status Not Found, create note to inform user"/>
+            <set-session-variable variableName="sv_sr_object_type_code" value="${ServiceRequestEntityObjectTypeCode}" doc:name="sv_sr_object_type_code"/>
+            <dw:transform-message doc:name="Transform Message">
+              <dw:input-payload mimeType="application/java"/>
+              <dw:set-variable variableName="fv_note_info">
+                <![CDATA[%dw 1.0
+%output application/java
+---
+using(
+	defaultUser = lookup("lookup-default-user", {
+	name: 0
+})
+)
+
+{
+	objecttypecode : sessionVars.sv_sr_object_type_code as :number, //new_servicerequest
+	isdocument: false,
+	ownerid_referenceto_systemuser: defaultUser.systemuserid,
+	objectid_referenceto_new_servicerequest: flowVars.fv_sr_info.new_servicerequestid,
+	subject: 'Field Engineer Status Not Found',
+	
+	notetext: 'Field Engineer Status: "' ++ sessionVars.sv_crm_servicerequest.FE_status ++ '" is not found in CRM, please contact Source Support from more info'
+    
+}]]>
+              </dw:set-variable>
+            </dw:transform-message>
+            <logger message="Note details after transformed: #[flowVars.fv_note_info]" level="INFO" doc:name="Note details after transformed"/>
+            <enricher target="#[variable:new_annotation]" doc:name="Message Enricher">
+              <dynamicscrm:create config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" logicalName="annotation" doc:name="Create Note for SR">
+                <dynamicscrm:attributes ref="#[flowVars.fv_note_info]"/>
+              </dynamicscrm:create>
+
+            </enricher>
+          </when>
+          <otherwise>
+            <logger message="FE Status Found or NULL, continue" level="INFO" doc:name="FE Status Found or NULL, continue"/>
+          </otherwise>
+        </choice>
+        <expression-component doc:name="Remove null fields from payload">
+          <![CDATA[
+// create new hashmap to store updating fields only
+java.util.Map ServiceRequestUpdate = new java.util.HashMap();
+
+if (payload.new_fecompletedworksummarynotes != null)
+{
+	if (payload.new_fecompletedworksummarynotes.trim().length() > 0 )
+	{
+		ServiceRequestUpdate.put("new_fecompletedworksummarynotes", payload.new_fecompletedworksummarynotes);
+	}
+}
+if(payload.new_fecompleteddatetime != null)
+{
+		ServiceRequestUpdate.put("new_fecompleteddatetime", payload.new_fecompleteddatetime);
+}
+if (payload.new_primaryonsitefeemail != null)
+{
+		if (payload.new_primaryonsitefeemail.trim().length() > 0)
+	{
+		ServiceRequestUpdate.put("new_primaryonsitefeemail", payload.new_primaryonsitefeemail);
+	}
+}
+if (payload.new_primaryonsitefename != null)
+{
+		if (payload.new_primaryonsitefename.trim().length() > 0)
+	{
+		ServiceRequestUpdate.put("new_primaryonsitefename", payload.new_primaryonsitefename);
+	}
+}
+if (payload.new_primaryonsitefephone != null)
+{
+		if (payload.new_primaryonsitefephone.trim().length() > 0)
+	{
+		ServiceRequestUpdate.put("new_primaryonsitefephone", payload.new_primaryonsitefephone);
+	}
+}
+if (payload.new_requestedfelocalarrivaldatetime != null)
+{
+	ServiceRequestUpdate.put("new_requestedfelocalarrivaldatetime", payload.new_requestedfelocalarrivaldatetime);
+}
+if (payload.new_scheduledfelocalarrivaldatetime != null)
+{
+	ServiceRequestUpdate.put("new_scheduledfelocalarrivaldatetime", payload.new_scheduledfelocalarrivaldatetime);
+}
+if (payload.new_actualfelocalarrivaldatetime != null)
+{
+	ServiceRequestUpdate.put("new_actualfelocalarrivaldatetime", payload.new_actualfelocalarrivaldatetime);
+}
+if (payload.new_secondaryonsitefeemail != null)
+{
+		if (payload.new_secondaryonsitefeemail.trim().length() > 0)
+	{
+		ServiceRequestUpdate.put("new_secondaryonsitefeemail", payload.new_secondaryonsitefeemail);
+	}
+}
+if (payload.new_secondaryonsitefename != null)
+{
+		if (payload.new_secondaryonsitefename.trim().length() > 0)
+	{
+		ServiceRequestUpdate.put("new_secondaryonsitefename", payload.new_secondaryonsitefename);
+	}
+}
+if (payload.new_secondaryonsitefephone != null)
+{
+		if (payload.new_secondaryonsitefephone.trim().length() > 0)
+	{
+		ServiceRequestUpdate.put("new_secondaryonsitefephone", payload.new_secondaryonsitefephone);
+	}
+}
+if (payload.new_fieldengineerstatus != null)
+{
+		if (payload.new_fieldengineerstatus.trim().length() > 0)
+	{
+		ServiceRequestUpdate.put("new_fieldengineerstatus", payload.new_fieldengineerstatus);
+	}
+}
+
+// set payload
+payload = ServiceRequestUpdate;
+
+return payload
+
+]]>
+        </expression-component>
+        <logger message="Payload aftre transform: #[payload]" level="INFO" doc:name="Payload after transform"/>
+        <dynamicscrm:update config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" id="#[flowVars.fv_sr_info.new_servicerequestid]" logicalName="new_servicerequest" doc:name="Update CRM Service Request"/>
+        <logger message="Service Request Updated, Now Updated Requested Items" level="INFO" doc:name="Service Request Updated"/>
+        <foreach collection="sessionVars.sv_crm_servicerequest.rma_items" counterVariableName="item" doc:name="For Each">
+          <set-session-variable variableName="sv_rma_item" value="#[payload]" doc:name="sv_rma_item"/>
+          <enricher target="#[variable:servicerequestitemExists]" doc:name="servicerequestitemExists">
+            <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot; row=&quot;1&quot; &gt;     &lt;entity name=&quot;amc_rmaitem&quot; &gt;         &lt;filter&gt;             &lt;condition attribute=&quot;amc_rmaitemid&quot; operator=&quot;eq&quot; value=&quot;#[payload.rma_item_id]&quot; /&gt;         &lt;/filter&gt;     &lt;/entity&gt; &lt;/fetch&gt;" doc:name="Query CRM RMA Items"/>
+          </enricher>
+          <choice doc:name="Check if servicerequestitem exists">
+            <when expression="#[servicerequestitemExists.hasNext() ==  true]">
+              <logger message="Found servicerequestitem, start to update" level="INFO" doc:name="Found servicerequestitem, start to update"/>
+              <dw:transform-message doc:name="Transform Message">
+                <dw:input-payload mimeType="application/java"/>
+                <dw:set-payload>
+                  <![CDATA[%dw 1.0
+%output application/java
+---
+{
+new_carrier: sessionVars.sv_rma_item.carrier,
+new_deliverydatetime: sessionVars.sv_rma_item.delivery_datetime_UTC  as :datetime >> "America/Chicago"
+						when sessionVars.sv_rma_item.delivery_datetime_UTC != null and sessionVars.sv_rma_item.delivery_datetime_UTC != "" otherwise null,
+am_shipdate: sessionVars.sv_rma_item.ship_date_UTC  as :datetime >> "America/Chicago"
+				when sessionVars.sv_rma_item.ship_date_UTC != null and sessionVars.sv_rma_item.ship_date_UTC != "" otherwise null,
+new_modeoftransportation: sessionVars.sv_rma_item.mode_of_transportation,
+am_trackingnumber: sessionVars.sv_rma_item.tracking_number,
+new_proofofdelivery: sessionVars.sv_rma_item.proof_of_delivery
+}
+
+]]>
+                </dw:set-payload>
+              </dw:transform-message>
+              <expression-component doc:name="Remove null fields from payload">
+                <![CDATA[// create new hashmap to store updating fields only
+java.util.Map RMAItemUpdate = new java.util.HashMap();
+
+if (payload.new_carrier != null)
+{
+	if (payload.new_carrier.trim().length() > 0)
+	{
+		RMAItemUpdate.put("new_carrier", payload.new_carrier);
+	}
+}
+if (payload.new_deliverydatetime != null)
+{
+RMAItemUpdate.put("new_deliverydatetime", payload.new_deliverydatetime);
+}
+if (payload.am_shipdate != null)
+{
+RMAItemUpdate.put("am_shipdate", payload.am_shipdate);
+}
+if (payload.new_modeoftransportation != null)
+{
+	if (payload.new_modeoftransportation.trim().length() > 0)
+	{
+		RMAItemUpdate.put("new_modeoftransportation", payload.new_modeoftransportation);
+	}
+}
+if (payload.am_trackingnumber != null)
+{
+	if (payload.am_trackingnumber.trim().length() > 0)
+	{
+		RMAItemUpdate.put("am_trackingnumber", payload.am_trackingnumber);
+	}
+}
+if (payload.new_proofofdelivery != null)
+{
+	if (payload.new_proofofdelivery.trim().length() > 0)
+	{
+		RMAItemUpdate.put("new_proofofdelivery", payload.new_proofofdelivery);
+	}
+}
+
+
+// set payload
+payload = RMAItemUpdate;
+
+return payload
+
+]]>
+              </expression-component>
+              <dynamicscrm:update config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" id="#[sessionVars.sv_rma_item.rma_item_id]" logicalName="amc_rmaitem" doc:name="Update RMA Item CRM"/>
+            </when>
+            <otherwise>
+              <logger message="RMA Items does not exists in CRM, skip" level="INFO" doc:name="RMA Items does not exists in CRM, skip"/>
+            </otherwise>
+          </choice>
+        </foreach>
+
+      </when>
+      <otherwise>
+        <logger message="Service Request does not exist, skip" level="INFO" doc:name="Service Request does not exist, skip"/>
+      </otherwise>
+    </choice>
+    <logger message="Finished" level="INFO" doc:name="Finished"/>
+    <exception-strategy ref="Catch_Exception_Handling1" doc:name="Reference Exception Strategy"/>
+  </flow>
+</mule>

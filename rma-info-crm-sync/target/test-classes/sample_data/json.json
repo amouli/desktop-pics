@@ -1,0 +1,309 @@
+{  
+   "RMA_list":[  
+      {  
+         "Request_Items":[  
+            {  
+               "action":null,
+               "description":null,
+               "is_component":"False",
+               "order_date":"2009-02-04 00:00:00.000",
+               "order_number":"1289270",
+               "part_number":"106264",
+               "product_code":"VIPSYS-NB",
+               "product_description":"VIP System - NB               VIP System - NB",
+               "rma_id":"36486",
+               "rma_type":"Notebook",
+               "serial_number":"921568"
+            }
+         ],
+         "action_request":"Out of Warranty Repair",
+         "comments":" he search tool below will assist you in gathering the necessary information",
+         "contact_info":{  
+            "contact_email":"lchen@equuscs.com",
+            "contact_name":"Leo Chen",
+            "contact_phone":"1234567890",
+            "emailcc":"",
+            "po_number":"RMA PO Number"
+         },
+         "create_date":"2018-02-06 03:10:00.000",
+         "customer_number":"9010226",
+         "order_number":null,
+         "original_po_number":null,
+         "problem_description":" his online RMA request form has been made available to registered Equus Computer Systems customers. ",
+         "rma_id":"36486",
+         "shipping_address":{  
+            "address_company_name":"ABC",
+            "address_line_1":"123 MAIN STREET",
+            "address_line_2":"TEST2",
+            "address_line_3":"TEST3",
+            "address_line_4":"TEST4",
+            "city":"ASAS",
+            "country":"France",
+            "country_code":"FR",
+            "postal_code":"AB1234567890",
+            "state":"Allier"
+         },
+         "system_serial_number":null,
+         "web_user_id":"32050014",
+         "will_call":"False"
+      },
+      {  
+         "Request_Items":[  
+            {  
+               "action":null,
+               "description":null,
+               "is_component":"False",
+               "order_date":"2006-11-10 00:00:00.000",
+               "order_number":"1178280",
+               "part_number":"106693",
+               "product_code":"1183",
+               "product_description":"I134M",
+               "rma_id":"36485",
+               "rma_type":"",
+               "serial_number":"867625"
+            }
+         ],
+         "action_request":"Cross-Ship parts Request (by Equus approval only)",
+         "comments":" Comments",
+         "contact_info":{  
+            "contact_email":"lchen3@equuscs.com",
+            "contact_name":"Leo3 Chen",
+            "contact_phone":"123345567",
+            "emailcc":"",
+            "po_number":""
+         },
+         "create_date":"2018-02-06 03:07:00.000",
+         "customer_number":"9010041",
+         "order_number":null,
+         "original_po_number":null,
+         "problem_description":" Problem Description",
+         "rma_id":"36485",
+         "shipping_address":{  
+            "address_company_name":"ISD #252 CANNON FALLS",
+            "address_line_1":"820 E MINNESOTA ST",
+            "address_line_2":"",
+            "address_line_3":"",
+            "address_line_4":"",
+            "city":"CANNON FALLS",
+            "country":"United States",
+            "country_code":"US",
+            "postal_code":"55009",
+            "state":"Minnesota"
+         },
+         "system_serial_number":null,
+         "web_user_id":"32050094",
+         "will_call":"False"
+      },
+      {  
+         "Request_Items":[  
+            {  
+               "action":null,
+               "description":null,
+               "is_component":"True",
+               "order_date":"2006-11-10 00:00:00.000",
+               "order_number":"1178280",
+               "part_number":"103247",
+               "product_code":"CP1046",
+               "product_description":"INTEL P4 3.06GHZ LGA775 FSB533EM64T HT W\/1MB CACHE #524",
+               "rma_id":"36484",
+               "rma_type":"",
+               "serial_number":"60497042"
+            },
+            {  
+               "action":null,
+               "description":null,
+               "is_component":"True",
+               "order_date":"2006-11-10 00:00:00.000",
+               "order_number":"1178280",
+               "part_number":"97792",
+               "product_code":"BS9918",
+               "product_description":"NOBILIS SERIES BASE           SYSTEM XP PRO SP2",
+               "rma_id":"36484",
+               "rma_type":"",
+               "serial_number":"BS9918-00867625-1.0"
+            },
+            {  
+               "action":null,
+               "description":null,
+               "is_component":"True",
+               "order_date":"2006-11-10 00:00:00.000",
+               "order_number":"1178280",
+               "part_number":"102762",
+               "product_code":"CD9057",
+               "product_description":"LITEON 16x DVDRW BLACK BULK   DUAL LAYER #SHM\/W-160P6S\/V-05",
+               "rma_id":"36484",
+               "rma_type":"",
+               "serial_number":"CD9057-00867625-2.0"
+            },
+            {  
+               "action":null,
+               "description":null,
+               "is_component":"True",
+               "order_date":"2006-11-10 00:00:00.000",
+               "order_number":"1178280",
+               "part_number":"103271",
+               "product_code":"CS3082",
+               "product_description":"NOBLECASE TW082-B MATX BLACK  TWR BLK\/SILVER\/USB\/AUDIO\/300W",
+               "rma_id":"36484",
+               "rma_type":"",
+               "serial_number":"CS3082-00867625-4.0"
+            },
+            {  
+               "action":null,
+               "description":null,
+               "is_component":"True",
+               "order_date":"2006-11-10 00:00:00.000",
+               "order_number":"1178280",
+               "part_number":"72250",
+               "product_code":"FD1003",
+               "product_description":"ALPS 1.44M FLOPPY DISK        DRIVE - BLACK DF354H121F\/G",
+               "rma_id":"36484",
+               "rma_type":"",
+               "serial_number":"FD1003-00867625-5.0"
+            }
+         ],
+         "action_request":"",
+         "comments":" ",
+         "contact_info":{  
+            "contact_email":"lchen3@equuscs.com",
+            "contact_name":"Leo3 Chen",
+            "contact_phone":"123345567",
+            "emailcc":"",
+            "po_number":""
+         },
+         "create_date":"2018-02-06 03:06:00.000",
+         "customer_number":"9010041",
+         "order_number":null,
+         "original_po_number":null,
+         "problem_description":" ",
+         "rma_id":"36484",
+         "shipping_address":{  
+            "address_company_name":"MEEKER COUNTY ADMINISTRATION",
+            "address_line_1":"325 SIBLEY AVENUE NORTH",
+            "address_line_2":"ATTN REBECCA MILLER",
+            "address_line_3":"",
+            "address_line_4":"",
+            "city":"LITCHFIELD",
+            "country":"United States",
+            "country_code":"US",
+            "postal_code":"55355",
+            "state":"Minnesota"
+         },
+         "system_serial_number":null,
+         "web_user_id":"32050094",
+         "will_call":"False"
+      },
+      {  
+         "Request_Items":[  
+            {  
+               "action":null,
+               "description":null,
+               "is_component":"False",
+               "order_date":"2009-02-04 00:00:00.000",
+               "order_number":"1289270",
+               "part_number":"106264",
+               "product_code":"VIPSYS-NB",
+               "product_description":"VIP System - NB               VIP System - NB",
+               "rma_id":"36482",
+               "rma_type":"Notebook",
+               "serial_number":"921568"
+            }
+         ],
+         "action_request":"",
+         "comments":" ",
+         "contact_info":{  
+            "contact_email":"lchen@equuscs.com",
+            "contact_name":"Leo Chen",
+            "contact_phone":"1234567890",
+            "emailcc":"",
+            "po_number":""
+         },
+         "create_date":"2018-02-06 03:04:00.000",
+         "customer_number":"9010226",
+         "order_number":null,
+         "original_po_number":null,
+         "problem_description":" ",
+         "rma_id":"36482",
+         "shipping_address":{  
+            "address_company_name":"Equus Computer Systems - MN House Acct",
+            "address_line_1":"5801 Clearwater Dr",
+            "address_line_2":"",
+            "address_line_3":"",
+            "address_line_4":"",
+            "city":"Minnetonka",
+            "country":"United States",
+            "country_code":"US",
+            "postal_code":"55343",
+            "state":"Minnesota"
+         },
+         "system_serial_number":null,
+         "web_user_id":"32050014",
+         "will_call":"False"
+      },
+      {  
+         "Request_Items":[  
+            {  
+               "action":null,
+               "description":null,
+               "is_component":"True",
+               "order_date":"2009-02-04 00:00:00.000",
+               "order_number":"1289270",
+               "part_number":"97124",
+               "product_code":"SYS0001",
+               "product_description":"System Srvc Routing-No Charge",
+               "rma_id":"36483",
+               "rma_type":"",
+               "serial_number":"921568SYS"
+            },
+            {  
+               "action":null,
+               "description":null,
+               "is_component":"True",
+               "order_date":"2009-02-04 00:00:00.000",
+               "order_number":"1289270",
+               "part_number":"76797",
+               "product_code":"MC0001",
+               "product_description":"THANK YOU FOR YOUR ORDER",
+               "rma_id":"36483",
+               "rma_type":"",
+               "serial_number":"MC0001-00921568-1.0"
+            }
+         ],
+         "action_request":"",
+         "comments":" ",
+         "contact_info":{  
+            "contact_email":"lchen@equuscs.com",
+            "contact_name":"Leo Chen",
+            "contact_phone":"1234567890",
+            "emailcc":"",
+            "po_number":""
+         },
+         "create_date":"2018-02-06 03:04:00.000",
+         "customer_number":"9010226",
+         "order_number":null,
+         "original_po_number":null,
+         "problem_description":" ",
+         "rma_id":"36483",
+         "shipping_address":{  
+            "address_company_name":"",
+            "address_line_1":"",
+            "address_line_2":"",
+            "address_line_3":"",
+            "address_line_4":"",
+            "city":"",
+            "country":"",
+            "country_code":"",
+            "postal_code":"",
+            "state":""
+         },
+         "system_serial_number":null,
+         "web_user_id":"32050014",
+         "will_call":"False"
+      }
+   ],
+   "rows_per_page":25,
+   "status_code":"200",
+   "status_message":"Success",
+   "total_pages":"1",
+   "total_rows":"5"
+}

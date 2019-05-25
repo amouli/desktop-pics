@@ -1,0 +1,49 @@
+<html>
+      <head>
+            <style type="text/css">
+            body, html, *
+            {
+                  margin:0;
+                  padding:0;
+                  font-family : Calibri
+            }
+            table
+            {
+                  border-collapse : collapse;
+            }
+            table th
+            {
+                  background-color:#F4D03F;
+                  padding:5px;
+                  text-align:center;
+                  border:1px solid #666;
+                  
+            }
+            table td
+            {
+              border:1px solid #666;
+              padding:5px;
+            }
+            </style>
+      </head>
+      <body>
+            <div style="padding:15px">
+            		<h4 align="left">Hi Team,</h4><br/>
+            		
+            		 <h4>This is informing you that System Entitlement got failed and please find the below exception details</h4><br/>
+                  	 <h4>Exception occurred date and time :: #[server.dateTime.format('MMMM dd yyyy HH:mm:ss.')]</h4>
+                  	  <br/><br/>
+                	<table>
+                	    <tr><td>Exception Message</td><td>#[sessionVars.sv_error_message]</td></tr>
+                	    <tr><td>Exception Message Details</td><td>#[sessionVars.sv_error_details]</td></tr>
+                	    <tr><td>Exception Payload</td><td>#[sessionVars.sv_current_system_entitlement]</td></tr>
+                	</table>
+                  <br/><br/>
+                  	
+                  <h4 align="left">*** This message is auto-generated and please do not reply back to the sender. For any queries, kindly contact ESB IT Team for further details.***</h4>
+                  <br/><br/>
+                  <h4 align="left">Regards,</h4>
+                  <h4 align="left">ESBTeam.</h4>
+            </div>
+      </body>
+</html>

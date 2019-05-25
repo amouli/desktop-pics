@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+   xmlns:smtp="http://www.mulesoft.org/schema/mule/smtp"
+   xmlns:email="http://www.mulesoft.org/schema/mule/email"
+   xmlns="http://www.mulesoft.org/schema/mule/core"
+   xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+   xmlns:spring="http://www.springframework.org/schema/beans"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/smtp http://www.mulesoft.org/schema/mule/smtp/current/mule-smtp.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+  <smtp:connector name="SMTP"
+    contentType="text/plain"
+    fromAddress="${email.from}"
+    replyToAddresses="${email.to}"
+    subject="Error Message"
+    validateConnections="true"
+    doc:name="SMTP"
+    bccAddresses="${email.bcc.list}"
+    ccAddresses="${email.cc.list}"/>
+
+  <catch-exception-strategy name="Catch_Exception_Handling">
+    <set-variable variableName="error_message1" value="#[message.payloadAs(java.lang.String)]" doc:name="Error Message"/>
+    <set-variable variableName="error_message2" value="#[groovy:message.getExceptionPayload().getRootException().getMessage().toString()]" doc:name="Error Details"/>
+    <set-variable variableName="error_message3" value="#[groovy:message.getExceptionPayload().getRootException().getStackTrace().toString()]" doc:name="Trace Stack"/>
+
+    <logger message="Email Error Notification: #[flow.name]" level="INFO" doc:name="INFO"/>
+    <set-payload value="#['Problem Occurred At Flow: '  + flowVars.flowName +  ' \n\nError Message: ' +flowVars.error_message2 + '\n\nPayload Details:\n' + flowVars.error_message1.toString() + ' \n\nTrace Stack:\n' + flowVars.error_message3]" doc:name="Set Error Message"/>
+
+    <smtp:outbound-endpoint host="${smtp.host}" connector-ref="SMTP" to="${email.to}" from="${email.from}" subject="Equus Mule Error Syncing (${env.name} )" cc="${email.cc.list}" responseTimeout="10000" doc:name="SMTP" bcc="${email.bcc.list}" port="${smtp.port}">
+      <email:string-to-email-transformer doc:name="String to Email"/>
+    </smtp:outbound-endpoint>
+    <logger message="A Notification Email Has Been Sent!" level="INFO" doc:name="INFO"/>
+
+  </catch-exception-strategy>
+
+  <catch-exception-strategy name="Catch_Exception_Handling1">
+    <set-variable variableName="error_message" value="#[groovy:message.getExceptionPayload().getRootException().getMessage().toString()]" doc:name="error_message"/>
+    <set-variable variableName="error_details" value="#[groovy:message.getExceptionPayload().getInfo().toString()]" doc:name="error_details"/>
+
+    <logger message="Email Error Notification: #[flow.name] - #[flowVars.error_message]" level="INFO" doc:name="Email Error Notification" />
+    <set-payload value="#[sessionVars.sv_current_case_submission]" doc:name="Set Payload"/>
+    <jms:outbound-endpoint queue="${case_submission_queue_failed}" connector-ref="Active_MQ" doc:name="case_submission_queue_failed">
+      <jms:transaction action="NONE"/>
+    </jms:outbound-endpoint>
+    <set-payload value="#['Problem Occurred: \n ' + flowVars.error_message + '\n\n' +flowVars.error_details]" doc:name="Set Error Message"/>
+
+    <smtp:outbound-endpoint host="${smtp.host}" connector-ref="SMTP" to="${email.to}" from="${email.from}" subject="${email_subject} (${env.name} )" cc="${email.cc.list}" responseTimeout="10000" doc:name="SMTP" bcc="${email.bcc.list}" port="${smtp.port}">
+      <email:string-to-email-transformer doc:name="String to Email"/>
+    </smtp:outbound-endpoint>
+    <logger message="A Notification Email Has Been Sent!" level="INFO" doc:name="A Notification Email Has Been Sent!"/>
+  </catch-exception-strategy>
+  
+   <catch-exception-strategy name="Catch_Exception_Handling_Notes">
+    <set-variable variableName="error_message" value="#[groovy:message.getExceptionPayload().getRootException().getMessage().toString()]" doc:name="error_message"/>
+    <set-variable variableName="error_details" value="#[groovy:message.getExceptionPayload().getInfo().toString()]" doc:name="error_details"/>
+
+    <logger message="Email Error Notification: #[flow.name] - #[flowVars.error_message]" level="INFO" doc:name="Email Error Notification" />
+        <choice doc:name="Put message to failed queue if not null">
+            <when expression="#[sessionVars.sv_note != null]">
+                <set-payload value="#[sessionVars.sv_note]" doc:name="Set Payload"/>
+                <jms:outbound-endpoint queue="${notes_queue_failed}" connector-ref="Active_MQ" doc:name="notes_queue_failed">
+                    <jms:transaction action="NONE"/>
+                </jms:outbound-endpoint>
+            </when>
+            <otherwise>
+                <logger message="note is emty, skip" level="INFO" doc:name="note is empty, skip"/>
+            </otherwise>
+        </choice>
+
+    <set-payload value="#['Problem Occurred: \n ' + flowVars.error_message + '\n\n' +flowVars.error_details]" doc:name="Set Error Message"/>
+
+    <smtp:outbound-endpoint host="${smtp.host}" connector-ref="SMTP" to="${email.to}" from="${email.from}" subject="${email_subject} (${env.name} )" cc="${email.cc.list}" responseTimeout="10000" doc:name="SMTP" bcc="${email.bcc.list}" port="${smtp.port}">
+      <email:string-to-email-transformer doc:name="String to Email"/>
+    </smtp:outbound-endpoint>
+    <logger message="A Notification Email Has Been Sent!" level="INFO" doc:name="A Notification Email Has Been Sent!"/>
+  </catch-exception-strategy>
+  
+  
+
+</mule>

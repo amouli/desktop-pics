@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting"
+	xmlns:dynamicscrm="http://www.mulesoft.org/schema/mule/dynamicscrm" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:json="http://www.mulesoft.org/schema/mule/json"  xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/dynamicscrm http://www.mulesoft.org/schema/mule/dynamicscrm/current/mule-dynamicscrm.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+
+    <flow name="lookup-user-by-crmid">
+        <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot; &gt;     &lt;entity name=&quot;systemuser&quot; &gt;             &lt;filter&gt;             &lt;condition attribute=&quot;systemuserid&quot; operator=&quot;eq&quot; value=&quot;#[payload.crmid]&quot; /&gt;         &lt;/filter&gt;         &lt;filter&gt;             &lt;condition attribute=&quot;isdisabled&quot; operator=&quot;eq&quot; value=&quot;0&quot; /&gt;         &lt;/filter&gt;     &lt;/entity&gt; &lt;/fetch&gt; " doc:name="Microsoft Dynamics CRM"/>
+    </flow>
+
+    <flow name="lookup-user">
+        <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot; &gt;
+    &lt;entity name=&quot;systemuser&quot; &gt;
+        &lt;attribute name=&quot;systemuserid&quot; /&gt;
+        &lt;filter&gt;
+            &lt;condition attribute=&quot;domainname&quot; operator=&quot;eq&quot; value=&quot;#[payload.name]&quot; /&gt;
+        &lt;/filter&gt;
+        &lt;filter&gt;
+            &lt;condition attribute=&quot;isdisabled&quot; operator=&quot;eq&quot; value=&quot;0&quot; /&gt;
+        &lt;/filter&gt;
+    &lt;/entity&gt;
+&lt;/fetch&gt;
+" doc:name="Microsoft Dynamics CRM"/>
+    </flow>
+    <flow name="lookup-default-user">
+        <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot;&gt;&lt;entity name=&quot;systemuser&quot;&gt;&lt;attribute name=&quot;systemuserid&quot; /&gt;&lt;filter&gt;&lt;condition attribute=&quot;domainname&quot; operator=&quot;eq&quot; value=&quot;${default.DomainName}&quot;  /&gt;&lt;/filter&gt;&lt;/entity&gt;&lt;/fetch&gt;" doc:name="Microsoft Dynamics CRM"/>
+        <set-payload value="#[payload.hasNext() ? payload.next(): &quot;&quot;]" doc:name="Set Payload"/>
+        <logger message="Default User :: #[payload]" level="INFO" doc:name="Logger"/>
+    </flow>
+    <flow name="lookup-defaultaccountinfo">
+        <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot; &gt;
+    &lt;entity name=&quot;account&quot; &gt;
+        &lt;filter&gt;
+            &lt;condition attribute=&quot;new_casewebformdefault&quot; operator=&quot;eq&quot; value=&quot;${default.CaseWebFormDefault}&quot; /&gt;
+        &lt;/filter&gt;
+    &lt;/entity&gt;
+&lt;/fetch&gt;" doc:name="Microsoft Dynamics CRM"/>
+    </flow>
+
+    <flow name="lookup-AccountByAccountNumber">
+        <enricher target="#[variable:accountExists]" doc:name="accountExists">
+            <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot;&gt;&lt;entity name=&quot;account&quot;&gt;&lt;filter&gt;&lt;condition attribute=&quot;accountnumber&quot; operator=&quot;eq&quot; value=&quot;#[sessionVars.sv_current_case_submission.account_number]&quot; /&gt;&lt;/filter&gt;&lt;/entity&gt;&lt;/fetch&gt;" doc:name="Query CRM Account"/>
+        </enricher>
+        <choice doc:name="Check if account exists">
+            <when expression="#[accountExists.hasNext() == false]">
+                <set-session-variable variableName="sv_accountInfo" value="#['']" doc:name="sv_accountInfo"/>
+            </when>
+            <otherwise>
+                <set-session-variable variableName="sv_accountInfo" value="#[accountExists.next()]" doc:name="sv_accountInfo"/>
+            </otherwise>
+        </choice>
+
+    </flow>
+
+    
+        <flow name="lookup-contactByEmail">
+        <enricher target="#[variable:contactExists]" doc:name="contactExists">
+            <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot;&gt;     &lt;entity name=&quot;contact&quot; &gt;         &lt;filter type=&quot;and&quot; &gt;             &lt;condition attribute=&quot;emailaddress1&quot; operator=&quot;eq&quot; value=&quot;#[sessionVars.sv_current_case_submission.email]&quot; /&gt;             &lt;condition attribute=&quot;statecode&quot; operator=&quot;eq&quot; value=&quot;0&quot; /&gt;         &lt;/filter&gt;     &lt;/entity&gt; &lt;/fetch&gt;" doc:name="Query CRM Contact"/>
+        </enricher>
+        <choice doc:name="Check if contact exists and active">
+            <when expression="#[contactExists.size() == 0]">
+
+
+                <set-session-variable variableName="sv_contactInfo" value="#['']" doc:name="sv_contactInfo"/>
+                <expression-component doc:name="Add Note"><![CDATA[ sessionVars.sv_note.add("\nNo Contacts found in CRM for email: " + sessionVars.sv_current_case_submission.email);]]></expression-component>
+                <set-session-variable variableName="sv_contact_accountInfo" value="#['']" doc:name="sv_contact_accountInfo"/>
+            </when>
+            <when expression="#[contactExists.size() &gt; 1]">
+                <set-session-variable variableName="sv_contactInfo" value="#[contactExists.next()]" doc:name="sv_contactInfo"/>
+                <expression-component doc:name="Add Note"><![CDATA[ sessionVars.sv_note.add("\nMultiple Contacts found in CRM for email: " + sessionVars.sv_current_case_submission.email);]]></expression-component>
+                <set-session-variable variableName="sv_contact_accountInfo" value="#['']" doc:name="sv_contact_accountInfo"/>
+            </when>
+            <otherwise>
+                <set-session-variable variableName="sv_contactInfo" value="#[contactExists.next()]" doc:name="sv_contactInfo"/>
+                <enricher target="#[variable:contactAccountExists]" doc:name="contactAccountExists">
+                    <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot; count=&quot;1&quot; &gt;
+    &lt;entity name=&quot;account&quot; /&gt;
+    &lt;filter&gt;
+        &lt;condition attribute=&quot;accountid&quot; operator=&quot;eq&quot; value=&quot;#[sessionVars.sv_contactInfo.parentcustomerid_referenceto_account]&quot; /&gt;
+    &lt;/filter&gt;
+&lt;/fetch&gt;" doc:name="Microsoft Dynamics CRM"/>
+                </enricher>
+                <set-session-variable variableName="sv_contact_accountInfo" value="#[contactAccountExists.hasNext() == true ? contactAccountExists.next() : '']" doc:name="sv_contact_accountInfo"/>
+
+
+            </otherwise>
+        </choice>
+
+    </flow>
+
+    <flow name="lookup-SystemSerialBySystemSerialNumber">
+        <enricher target="#[variable:serialExists]" doc:name="serialExists">
+            <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot; &gt;
+    &lt;entity name=&quot;amc_serialnumber&quot; &gt;
+        &lt;filter&gt;
+            &lt;condition attribute=&quot;amc_name&quot; operator=&quot;eq&quot; value=&quot;#[sessionVars.sv_current_case_submission.serial_number]&quot; /&gt;
+        &lt;/filter&gt;
+    &lt;/entity&gt;
+&lt;/fetch&gt;" doc:name="Query CRM Serial"/>
+        </enricher>
+        <choice doc:name="Check if system serial exists">
+            <when expression="#[serialExists.hasNext() == false]">
+                <set-session-variable variableName="sv_system_serial_info" value="#['']" doc:name="sv_system_serial_info"/>
+
+            </when>
+            <otherwise>
+                <set-session-variable variableName="sv_system_serial_info" value="#[serialExists.next()]" doc:name="sv_system_serial_info"/>
+
+            </otherwise>
+        </choice>
+
+    </flow>
+    
+    <sub-flow name="lookup-EmailVerify-Contact">
+
+    <enricher target="#[flowVars.contactEmailVerify]" doc:name="Message Enricher">
+      <processor-chain doc:name="Processor Chain">
+        <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot; &gt;&lt;entity name=&quot;contact&quot; &gt;&lt;attribute name=&quot;fullname&quot; /&gt;&lt;attribute name=&quot;emailaddress1&quot; /&gt;&lt;link-entity name=&quot;account&quot; from=&quot;accountid&quot; to=&quot;parentcustomerid&quot; alias=&quot;acc&quot; link-type=&quot;inner&quot; &gt; &lt;attribute name=&quot;accountnumber&quot; /&gt;&lt;/link-entity&gt;&lt;filter type=&quot;and&quot; &gt;&lt;condition entityname=&quot;contact&quot; attribute=&quot;emailaddress1&quot; operator=&quot;eq&quot; value=&quot;#[payload.email]&quot; /&gt;&lt;condition entityname=&quot;account&quot; attribute=&quot;accountnumber&quot; operator=&quot;eq&quot; value=&quot;#[payload.account_number]&quot; /&gt; &lt;/filter&gt;  &lt;/entity&gt; &lt;/fetch&gt;" doc:name="Verify Email in Contact CRM"/>
+        <set-payload value="#[payload.hasNext() ? payload.next(): &quot;not matched&quot;]" doc:name="Set Contact Id Payload"/>
+      </processor-chain>
+    </enricher>
+    <choice doc:name="Validate Contact Id">
+      <when expression="#[flowVars.contactEmailVerify==&quot;not matched&quot;]">
+
+        <expression-component doc:name="Contact Payload Expression">
+          <![CDATA[java.util.Map map = new java.util.HashMap();
+
+	
+	 
+	map.put("firstname", payload.first_name.trim());
+	map.put("lastname", payload.last_name.trim());
+
+map.put("emailaddress1", payload.email);
+map.put("telephone1", payload.phone);
+map.put("parentcustomerid_referenceto_account", flowVars.accountInfoId);
+return payload=map;]]>
+        </expression-component>
+
+        <dynamicscrm:create config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" logicalName="contact" doc:name="Create new Contact in CRM"/>
+      </when>
+      <otherwise>
+        <logger message="Contact Email Id Matched" level="INFO" doc:name="Matched"/>
+        <expression-component doc:name="Contact Payload Expression">
+          <![CDATA[java.util.Map map = new java.util.HashMap();
+
+map.put("telephone1", payload.phone);
+return payload=map;]]>
+        </expression-component>
+        <dynamicscrm:update config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" id="#[flowVars.contactEmailVerify.contactid]" logicalName="contact" doc:name="Update Contact in CRM"/>
+        <expression-component doc:name="Matched Contact Id Expression"><![CDATA[return payload=flowVars.contactEmailVerify.contactid;]]></expression-component>
+      </otherwise>
+    </choice>
+  </sub-flow>
+  <sub-flow name="lookup-AccountId">
+
+    <enricher target="#[flowVars.accountNumberVerify]" doc:name="Message Enricher">
+      <processor-chain doc:name="Processor Chain">
+
+        <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot;&gt;&lt;entity name=&quot;account&quot;&gt;&lt;attribute name=&quot;accountid&quot; /&gt;&lt;filter&gt;&lt;filter type=&quot;and&quot;&gt;&lt;condition attribute=&quot;statecode&quot; operator=&quot;eq&quot; value=&quot;0&quot; /&gt;&lt;condition attribute=&quot;accountnumber&quot; operator=&quot;eq&quot; value=&quot;#[payload.account_number]&quot; /&gt;&lt;/filter&gt;&lt;/filter&gt;&lt;/entity&gt;&lt;/fetch&gt;" doc:name="Verify Account Number in Account entity CRM"/>
+        <set-payload value="#[payload.hasNext() ? payload.next(): &quot;not matched&quot;]" doc:name="Set Account Id as Payload"/>
+      </processor-chain>
+    </enricher>
+    <choice doc:name="Validate Account Number Id">
+      <when expression="#[flowVars.accountNumberVerify == &quot;not matched&quot;]">
+
+        <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot; &gt;     &lt;entity name=&quot;account&quot; &gt;     &lt;attribute name=&quot;accountid&quot; /&gt;     &lt;filter&gt;             &lt;condition attribute=&quot;new_casewebformdefault&quot; operator=&quot;eq&quot; value=&quot;${default.CaseWebFormDefault}&quot; /&gt;         &lt;/filter&gt;     &lt;/entity&gt; &lt;/fetch&gt;" doc:name="Fetch CRM Account CaseWebFormDefault Account Id"/>
+        <scripting:component doc:name="Set Case Web Form Default Id  ">
+          <scripting:script engine="Groovy">
+            <![CDATA[import org.mule.streaming.ConsumerIterator; 
+Map<String, String> map = new HashMap<String, String>();
+
+while(payload.hasNext())
+{
+	map=(Map) payload.next();	
+}
+
+payload=map.get("accountid");
+
+String note = (payload == null && payload == "") ? "Account is not resolved for the Account Number"+sessionVars.sv_current_case_submission.account_number : "";
+
+String comment_accountNote=sessionVars.sv_current_case_submission.problem_description == null ? note  : sessionVars.sv_current_case_submission.problem_description +"\n"+ note;
+
+sessionVars.sv_note.add(comment_accountNote);
+return payload;
+]]>
+          </scripting:script>
+        </scripting:component>
+      </when>
+      <otherwise>
+        <logger message="CRM Account Number Matched  #[payload]" level="INFO" doc:name="Matched"/>
+        <expression-component doc:name="Matched Account Id"><![CDATA[String note = (payload == null && payload == "") ? "Account is not resolved for the Account Number"+payload.account_number : "";
+
+String comment_accountNote =  payload.problem_description +"\n"+ note;
+
+System.out.println("Note :"+comment_accountNote);
+sessionVars.sv_note.add(comment_accountNote);
+payload=flowVars.accountNumberVerify.accountid;
+return payload;]]></expression-component>
+      </otherwise>
+    </choice>
+
+
+
+  </sub-flow>
+    <sub-flow name="lookup-SerialNumber">
+        <dynamicscrm:retrieve-multiple-by-query config-ref="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" query="&lt;fetch mapping=&quot;logical&quot; &gt;     &lt;entity name=&quot;amc_serialnumber&quot; &gt;         &lt;attribute name=&quot;amc_serialnumberid&quot; /&gt;         &lt;attribute name=&quot;new_gorderprodcat&quot; /&gt;         &lt;attribute name=&quot;new_salesordernumber&quot; /&gt;         &lt;attribute name=&quot;new_originalsalesoredernumberurl&quot; /&gt;         &lt;attribute name=&quot;new_originalsalesbranch&quot; /&gt;         &lt;attribute name=&quot;new_originalbuildbranch&quot; /&gt;         &lt;attribute name=&quot;new_dateinvoice&quot; /&gt;         &lt;attribute name=&quot;new_originalsospponumber&quot; /&gt;         &lt;filter type=&quot;and&quot; &gt;             &lt;condition attribute=&quot;amc_name&quot; operator=&quot;eq&quot; value=&quot;#[sessionVars.sv_current_case_submission.serial_number]&quot; /&gt;             &lt;condition attribute=&quot;new_jdenumber&quot; operator=&quot;eq&quot; value=&quot;#[sessionVars.sv_current_case_submission.account_number]&quot; /&gt;  &lt;/filter&gt;     &lt;/entity&gt; &lt;/fetch&gt;" doc:name="Fetch CRM Serial Number Info"/>
+        <set-payload value="#[payload.hasNext() ? payload.next(): &quot;not matched&quot;]" doc:name="Set Serial Number Info"/>
+        <choice doc:name="Validate System Serial Number is not Empty">
+            <when expression="#[payload != 'not matched' &amp;&amp; (sessionVars.sv_current_case_submission.serial_number != null &amp;&amp; sessionVars.sv_current_case_submission.serial_number != '')]">
+                <logger message="System Serial number exists in CRM" level="INFO" doc:name="System Serial number exists in CRM"/>
+            </when>
+            <when expression="#[payload == 'not matched' &amp;&amp; (sessionVars.sv_current_case_submission.serial_number != null &amp;&amp; sessionVars.sv_current_case_submission.serial_number != '')]">
+                <logger message="System Serial #[sessionVars.sv_current_case_submission.serial_number] exists but can not be find in CRM" level="INFO" doc:name="System Serial exists but can not be find in CRM"/>
+                <expression-component doc:name="SystemSerialNumber Note Expression"><![CDATA[java.util.Map map = new java.util.HashMap();
+
+String systemSerialNote="System Serial " + sessionVars.sv_current_case_submission.serial_number + " exists but can not be found in CRM ";
+sessionVars.sv_note.add(systemSerialNote);
+
+map.put("amc_serialnumberid", "");
+return payload=map;]]></expression-component>
+            </when>
+            <otherwise>
+                <logger message="System Serial number is missing from the RMA Request Form" level="INFO" doc:name="System Serial number is missing from the RMA Request Form"/>
+                <expression-component doc:name="SystemSerialNumber Note Expression"><![CDATA[java.util.Map map = new java.util.HashMap();
+
+String systemSerialNote="System Serial Number is missing from RMA Request Form";
+sessionVars.sv_note.add(systemSerialNote);
+
+map.put("amc_serialnumberid", "");
+return payload=map;]]></expression-component>
+            </otherwise>
+        </choice>
+    </sub-flow>
+    
+<flow name="lookup-CountryAttributeValue">
+    <expression-component doc:name="Set Error Var">
+      <![CDATA[sessionVars.code="102";
+sessionVars.message="Country attributes value transformation got failed";
+sessionVars.flowName=flow.name;]]>
+    </expression-component>
+
+    <dw:transform-message doc:name="Transform Message">
+      <dw:input-payload mimeType="application/java"/>
+      <dw:set-payload>
+        <![CDATA[%dw 1.0
+%output application/java
+---
+{
+	CountryAttribute: 279640000 when payload.CountryCode == "AE" otherwise
+279640001 when payload.CountryCode == "AI" otherwise
+279640002 when payload.CountryCode == "AL" otherwise
+279640003 when payload.CountryCode == "AM" otherwise
+279640004 when payload.CountryCode == "AN" otherwise
+279640005 when payload.CountryCode == "AR" otherwise
+279640006 when payload.CountryCode == "AT" otherwise
+279640007 when payload.CountryCode == "AU" otherwise
+279640008 when payload.CountryCode == "AW" otherwise
+279640009 when payload.CountryCode == "AZ" otherwise
+279640010 when payload.CountryCode == "BD" otherwise
+279640011 when payload.CountryCode == "BE" otherwise
+279640012 when payload.CountryCode == "BG" otherwise
+279640013 when payload.CountryCode == "BH" otherwise
+279640014 when payload.CountryCode == "BM" otherwise
+279640015 when payload.CountryCode == "BR" otherwise
+279640016 when payload.CountryCode == "CA" otherwise
+279640017 when payload.CountryCode == "CH" otherwise
+279640018 when payload.CountryCode == "CL" otherwise
+279640019 when payload.CountryCode == "CN" otherwise
+279640020 when payload.CountryCode == "CO" otherwise
+279640021 when payload.CountryCode == "CR" otherwise
+279640022 when payload.CountryCode == "CY" otherwise
+279640023 when payload.CountryCode == "CZ" otherwise
+279640024 when payload.CountryCode == "DE" otherwise
+279640025 when payload.CountryCode == "DK" otherwise
+279640026 when payload.CountryCode == "DO" otherwise
+279640027 when payload.CountryCode == "EC" otherwise
+279640028 when payload.CountryCode == "EG" otherwise
+279640029 when payload.CountryCode == "ES" otherwise
+279640030 when payload.CountryCode == "FI" otherwise
+279640031 when payload.CountryCode == "FJ" otherwise
+279640032 when payload.CountryCode == "FO" otherwise
+279640033 when payload.CountryCode == "FR" otherwise
+279640034 when payload.CountryCode == "GB" otherwise
+279640035 when payload.CountryCode == "GE" otherwise
+279640036 when payload.CountryCode == "GR" otherwise
+279640037 when payload.CountryCode == "GU" otherwise
+279640038 when payload.CountryCode == "HK" otherwise
+279640039 when payload.CountryCode == "HU" otherwise
+279640040 when payload.CountryCode == "ID" otherwise
+279640041 when payload.CountryCode == "IE" otherwise
+279640042 when payload.CountryCode == "IL" otherwise
+279640043 when payload.CountryCode == "IN" otherwise
+279640044 when payload.CountryCode == "IQ" otherwise
+279640045 when payload.CountryCode == "IS" otherwise
+279640046 when payload.CountryCode == "IT" otherwise
+279640047 when payload.CountryCode == "JO" otherwise
+279640048 when payload.CountryCode == "JP" otherwise
+279640049 when payload.CountryCode == "KE" otherwise
+279640050 when payload.CountryCode == "KG" otherwise
+279640051 when payload.CountryCode == "KH" otherwise
+279640052 when payload.CountryCode == "KR" otherwise
+279640053 when payload.CountryCode == "KW" otherwise
+279640054 when payload.CountryCode == "KY" otherwise
+279640055 when payload.CountryCode == "LB" otherwise
+279640056 when payload.CountryCode == "LU" otherwise
+279640057 when payload.CountryCode == "MA" otherwise
+279640058 when payload.CountryCode == "MK" otherwise
+279640059 when payload.CountryCode == "MO" otherwise
+279640060 when payload.CountryCode == "MU" otherwise
+279640061 when payload.CountryCode == "MV" otherwise
+279640062 when payload.CountryCode == "MX" otherwise
+279640063 when payload.CountryCode == "MY" otherwise
+279640064 when payload.CountryCode == "MZ" otherwise
+279640065 when payload.CountryCode == "NC" otherwise
+279640066 when payload.CountryCode == "NG" otherwise
+279640067 when payload.CountryCode == "NL" otherwise
+279640068 when payload.CountryCode == "NO" otherwise
+279640069 when payload.CountryCode == "NP" otherwise
+279640070 when payload.CountryCode == "NZ" otherwise
+279640071 when payload.CountryCode == "OM" otherwise
+279640072 when payload.CountryCode == "PA" otherwise
+279640073 when payload.CountryCode == "PE" otherwise
+279640074 when payload.CountryCode == "PF" otherwise
+279640075 when payload.CountryCode == "PH" otherwise
+279640076 when payload.CountryCode == "PK" otherwise
+279640077 when payload.CountryCode == "PL" otherwise
+279640078 when payload.CountryCode == "PR" otherwise
+279640079 when payload.CountryCode == "PT" otherwise
+279640080 when payload.CountryCode == "PY" otherwise
+279640081 when payload.CountryCode == "QA" otherwise
+279640082 when payload.CountryCode == "RO" otherwise
+279640083 when payload.CountryCode == "RU" otherwise
+279640084 when payload.CountryCode == "SA" otherwise
+279640085 when payload.CountryCode == "SC" otherwise
+279640086 when payload.CountryCode == "SE" otherwise
+279640087 when payload.CountryCode == "SG" otherwise
+279640088 when payload.CountryCode == "SV" otherwise
+279640089 when payload.CountryCode == "TC" otherwise
+279640090 when payload.CountryCode == "TH" otherwise
+279640091 when payload.CountryCode == "TJ" otherwise
+279640092 when payload.CountryCode == "TR" otherwise
+279640093 when payload.CountryCode == "TT" otherwise
+279640094 when payload.CountryCode == "TW" otherwise
+279640095 when payload.CountryCode == "TZ" otherwise
+279640096 when payload.CountryCode == "UA" otherwise
+279640097 when payload.CountryCode == "UG" otherwise
+279640098 when payload.CountryCode == "US" otherwise
+279640099 when payload.CountryCode == "UY" otherwise
+279640100 when payload.CountryCode == "VA" otherwise
+279640101 when payload.CountryCode == "VN" otherwise
+279640102 when payload.CountryCode == "YU" otherwise
+279640103 when payload.CountryCode == "ZA" otherwise
+279640104 when payload.CountryCode == "ZM" otherwise
+279640105 when payload.CountryCode == "ZW" otherwise 279640098
+
+}]]>
+      </dw:set-payload>
+    </dw:transform-message>
+
+  </flow>
+
+</mule>

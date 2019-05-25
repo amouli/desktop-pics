@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:context="http://www.springframework.org/schema/context" xmlns:dynamicscrm="http://www.mulesoft.org/schema/mule/dynamicscrm"
+	xmlns:smtp="http://www.mulesoft.org/schema/mule/smtp" xmlns:secure-property-placeholder="http://www.mulesoft.org/schema/mule/secure-property-placeholder" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/dynamicscrm http://www.mulesoft.org/schema/mule/dynamicscrm/current/mule-dynamicscrm.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/secure-property-placeholder http://www.mulesoft.org/schema/mule/secure-property-placeholder/current/mule-secure-property-placeholder.xsd
+http://www.mulesoft.org/schema/mule/smtp http://www.mulesoft.org/schema/mule/smtp/current/mule-smtp.xsd
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-current.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+ 	
+ 	<!--
+  		Default, development properties. Use the config-override.properties below
+  		to set environmentally specific properties.
+  -->
+  <context:property-placeholder location="classpath:config.properties" order="2"/>
+  <!--
+    This file should exist on the server's classpath (e.g.: MULE_HOME/conf).
+    You can add it in src/main/resources if you wish to override something in
+    your local environment but do not check it into the project.
+   -->
+  <context:property-placeholder location="classpath:config-override.properties"
+         order="1" ignore-unresolvable="true" ignore-resource-not-found="true"/>
+ 	
+ 	
+ 	<http:request-config name="HTTP_Request_Configuration" host="${api.host}" port="80" doc:name="HTTP Request Configuration"/>
+   	
+   	<jms:activemq-connector name="Active_MQ" specification="1.1" brokerURL="${brokerUrl}" validateConnections="true" doc:name="Active MQ" persistentDelivery="true" numberOfConsumers="1" cacheJmsSessions="false" maxRedelivery="5"/>
+    
+    <smtp:connector name="SMTP" bccAddresses="${email.bcc.list}" ccAddresses="${email.cc.list}" contentType="text/html" fromAddress="${email.from}" replyToAddresses="${email.to}" subject="Error Message" validateConnections="true" doc:name="SMTP"/>
+    <!-- <smtp:gmail-connector name="Gmail" contentType="text/html" validateConnections="true" doc:name="Gmail"/> -->
+    
+    <dynamicscrm:ntlm-direct-connection-config name="Microsoft_Dynamics_CRM__NTLM_Direct_Connection" username="${crm.account}" password="${crm.pwd}" organizationServiceUrl="${crm.host}" domain="EQUUS" doc:name="Microsoft Dynamics CRM: NTLM Direct Connection"/>
+    
+    
+    <catch-exception-strategy name="globalCatch_Exception_Strategy">
+        <expression-component doc:name="Set Exception Entry"><![CDATA[java.util.Date today = new java.util.Date();
+java.util.Map msgObj=new java.util.HashMap();
+System.out.println("exception  :: "+exception+" ----cause   ::    "+exception.cause);
+sessionVars.message=sessionVars.message +  " - " + (null==exception?"No exception information available.":exception.cause);
+
+msgObj.put("transactionId",flowVars.msgId);
+msgObj.put("statusCode","2");
+msgObj.put("timestamp",new java.sql.Timestamp(today.getTime()));
+msgObj.put("errorTrace", sessionVars.message);
+msgObj.put("errorCode",sessionVars.code);
+msgObj.put("inputPayload", sessionVars.queuePayload);
+msgObj.put("identifierKey",sessionVars.flowname);
+
+payload=msgObj;
+
+return payload;]]></expression-component>
+        <jms:outbound-endpoint queue="ErrorMessageLogEntry" connector-ref="Active_MQ" doc:name="ErrorMessageLogEntry"/>
+        <enricher doc:name="Message Enricher" target="#[flowVars.jmsres]">
+            <processor-chain doc:name="Processor Chain">
+                <expression-component doc:name="Set TransactionLogUpdate values"><![CDATA[java.util.Date today = new java.util.Date();
+java.util.Map txnObj=new java.util.HashMap();
+txnObj.put("transactionId",flowVars.msgId);
+txnObj.put("statusCode","2");
+txnObj.put("timestamp",new java.sql.Timestamp(today.getTime()));
+
+payload=txnObj;
+
+return payload;]]></expression-component>
+                <jms:outbound-endpoint queue="TransactionLogUpdate" connector-ref="Active_MQ" doc:name="TransactionLogUpdate"/>
+            </processor-chain>
+        </enricher>
+        <flow-ref name="NotificationService-Support" doc:name="NotificationService-Support"/>
+        <flow-ref name="globalSub_Flow" doc:name="globalSub_Flow"/>
+
+    </catch-exception-strategy>
+    <sub-flow name="globalSub_Flow">
+        <set-payload doc:name="Set Payload" value="{&quot;code&quot;:&quot;#[sessionVars.code]&quot;,&quot;message&quot;:&quot;#[sessionVars.message]&quot;}"/>
+        <logger level="INFO" doc:name="Final Status" message="Final status  is  :: #[payload]"/>
+    </sub-flow>
+    <sub-flow name="NotificationService-Support">
+        <object-to-string-transformer doc:name="Object to String"/>
+        <parse-template location="ExceptionTemplate.html" doc:name="Parse Template"/>
+        <set-variable variableName="fv_current_payload" value="#[payload]" doc:name="fv_current_payload"/>
+        <set-payload value="#[sessionVars.sv_rma_info]" doc:name="Set Payload"/>
+        <jms:outbound-endpoint queue="${rma.info_queue_failed}" connector-ref="Active_MQ" doc:name="rma_info_queue_failed"/>
+        <set-payload value="#[flowVars.fv_current_payload]" doc:name="Set Payload"/>
+
+        <smtp:outbound-endpoint host="${smtp.host}" responseTimeout="10000" doc:name="SMTP-EQUUS" bcc="${email.bcc.list}" cc="${email.cc.list}" connector-ref="SMTP" from="${email.from}" port="${smtp.port}" subject="${email_subject}(${env.name})" to="${email.to}"  />
+    </sub-flow>
+</mule>

@@ -1,0 +1,58 @@
+{
+		"Request_Items": [{
+			"action": null,
+			"description": null,
+			"is_component": "False",
+			"order_date": "2009-02-04 00:00:00.000",
+			"order_number": "1289270",
+			"part_number": "106264",
+			"product_code": "VIPSYS-NB",
+			"product_description": null,
+			"rma_id": "36455",
+			"rma_type": "Notebook",
+			"serial_number": "921568"
+		},
+		{
+			"action": null,
+			"description": null,
+			"is_component": "True",
+			"order_date": "2009-02-04 00:00:00.000",
+			"order_number": "1289270",
+			"part_number": "76797",
+			"product_code": "MC0001",
+			"product_description": null,
+			"rma_id": "36455",
+			"rma_type": "",
+			"serial_number": "MC0001-00921568-1.0"
+		}],
+		"action_request": "Ship system in for Equus repair",
+		"comments": "First, install Node.js. Then, install the latest Cordova and Ionic command-line tools in your terminal. Follow the Android and iOS platform guides to install required tools for development.",
+		"contact_info": {
+			"contact_email": "css@complete-software.com",
+			"contact_name": "Marty Cerza-1",
+			"contact_phone": "1234567890",
+			"emailcc": "haha@equuscs.com",
+			"po_number": "RMA"
+		},
+		"create_date": "2018-02-01 01:44:00.000",
+		"customer_number": "9041949",
+		"order_number": null,
+		"original_po_number": null,
+		"problem_description": "Equus is proud to be one of North America's largest computing system manufacturers. ",
+		"rma_id": "36455",
+		"shipping_address": {
+			"address_company_name": "ABC",
+			"address_line_1": "123 MAIN STREET",
+			"address_line_2": "TEST2",
+			"address_line_3": "TEST3",
+			"address_line_4": "",
+			"city": "ABCDE",
+			"country": "Brazil",
+			"country_code": "BD",
+			"postal_code": "987654321012",
+			"state": "Minnesota"
+		},
+		"system_serial_number": null,
+		"web_user_id": "32050014",
+		"will_call": "False"
+	}

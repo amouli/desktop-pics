@@ -1,0 +1,50 @@
+<classpath>
+  <classpathentry kind="src" path="src/main/api" excluding="**/*.java"/>
+  <classpathentry kind="src" path="src/main/app" excluding="**/*.java"/>
+  <classpathentry kind="src" path="src/main/java"/>
+  <classpathentry kind="src" path="src/main/resources" excluding="**/*.java"/>
+  <classpathentry kind="src" path="src/test/java" output="target/test-classes"/>
+  <classpathentry kind="src" path="src/test/resources" output="target/test-classes" excluding="**/*.java"/>
+  <classpathentry kind="output" path="target/classes"/>
+  <classpathentry kind="con" path="MULE_RUNTIME"/>
+  <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/activemq/activeio-core/3.1.4/activeio-core-3.1.4.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/activemq/activemq-broker/5.15.2/activemq-broker-5.15.2.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/activemq/activemq-client/5.15.2/activemq-client-5.15.2.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/activemq/activemq-console/5.15.2/activemq-console-5.15.2.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/activemq/activemq-kahadb-store/5.15.2/activemq-kahadb-store-5.15.2.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/activemq/activemq-openwire-legacy/5.15.2/activemq-openwire-legacy-5.15.2.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/activemq/protobuf/activemq-protobuf/1.1/activemq-protobuf-1.1.jar"/>
+  <classpathentry kind="var" path="M2_REPO/avalon-framework/avalon-framework/4.1.3/avalon-framework-4.1.3.jar"/>
+  <classpathentry kind="var" path="M2_REPO/commons-daemon/commons-daemon/1.0.15/commons-daemon-1.0.15.jar"/>
+  <classpathentry kind="var" path="M2_REPO/commons-lang/commons-lang/2.6/commons-lang-2.6.jar"/>
+  <classpathentry kind="var" path="M2_REPO/commons-logging/commons-logging/1.1/commons-logging-1.1.jar"/>
+  <classpathentry kind="var" path="M2_REPO/commons-net/commons-net/3.6/commons-net-3.6.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/commons/commons-pool2/2.4.2/commons-pool2-2.4.2.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/cxf/cxf-api/2.7.15/cxf-api-2.7.15.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/cxf/cxf-rt-bindings-soap/2.7.15/cxf-rt-bindings-soap-2.7.15.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/cxf/cxf-rt-core/2.7.15/cxf-rt-core-2.7.15.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/cxf/cxf-rt-databinding-jaxb/2.7.15/cxf-rt-databinding-jaxb-2.7.15.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/cxf/cxf-rt-transports-http/2.7.15/cxf-rt-transports-http-2.7.15.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/cxf/cxf-rt-transports-http-hc/2.7.15/cxf-rt-transports-http-hc-2.7.15.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/cxf/cxf-rt-ws-security/2.7.15/cxf-rt-ws-security-2.7.15.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/geronimo/specs/geronimo-j2ee-management_1.1_spec/1.0.1/geronimo-j2ee-management_1.1_spec-1.0.1.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/geronimo/specs/geronimo-javamail_1.4_spec/1.7.1/geronimo-javamail_1.4_spec-1.7.1.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/fusesource/hawtbuf/hawtbuf/1.11/hawtbuf-1.11.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/fusesource/hawtbuf/hawtbuf-proto/1.11/hawtbuf-proto-1.11.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/httpcomponents/httpasyncclient/4.0-beta3/httpasyncclient-4.0-beta3.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/httpcomponents/httpcore-nio/4.2.4/httpcore-nio-4.2.4.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/fasterxml/jackson/core/jackson-annotations/2.6.7/jackson-annotations-2.6.7.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/fasterxml/jackson/core/jackson-core/2.6.7/jackson-core-2.6.7.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/fasterxml/jackson/core/jackson-databind/2.6.7/jackson-databind-2.6.7.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/jasypt/jasypt/1.9.2/jasypt-1.9.2.jar"/>
+  <classpathentry kind="var" path="M2_REPO/joda-time/joda-time/2.2/joda-time-2.2.jar"/>
+  <classpathentry kind="var" path="M2_REPO/log4j/log4j/1.2.12/log4j-1.2.12.jar"/>
+  <classpathentry kind="var" path="M2_REPO/logkit/logkit/1.0.1/logkit-1.0.1.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/mule/tools/devkit/mule-devkit-shade/3.9.4/mule-devkit-shade-3.9.4.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/mule/modules/mule-module-ms-dynamics-crm/2.9.2-SNAPSHOT/mule-module-ms-dynamics-crm-2.9.2-SNAPSHOT.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/servicemix/bundles/org.apache.servicemix.bundles.josql/1.5_5/org.apache.servicemix.bundles.josql-1.5_5.jar"/>
+  <classpathentry kind="var" path="M2_REPO/xalan/serializer/2.7.1/serializer-2.7.1.jar"/>
+  <classpathentry kind="var" path="M2_REPO/javax/servlet/servlet-api/2.3/servlet-api-2.3.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/xbean/xbean-spring/4.2/xbean-spring-4.2.jar"/>
+</classpath>

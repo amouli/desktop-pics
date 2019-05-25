@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+  <flow name="jde-account-to-queue-flow" initialState="started" processingStrategy="synchronous">
+    <poll doc:name="Poll">
+      <fixed-frequency-scheduler frequency="5" timeUnit="MINUTES"/>
+      <watermark variable="fv_lastRunAccountInfo" default-expression="#['2019-02-20 10:00:08']" update-expression="#[flowVars.fv_account_last_update]"/>
+      <processor-chain doc:name="Processor Chain">
+        <logger message="jde-account-to-queue-flow start at #[new java.text.SimpleDateFormat('yyyy-MM-dd hh:mm:ss aa').format(new java.util.Date())]" level="INFO" doc:name="Poll Date" category="jde-account-to-queue.jde-account-to-queue-flow"/>
+        <set-payload value="{&quot;str_start_date&quot;:&quot;#[flowVars.fv_lastRunAccountInfo]&quot;,&quot;str_end_date&quot;:&quot;#[new java.text.SimpleDateFormat('yyyy-MM-dd HH:mm:ss').format(new java.util.Date())]  &quot;,&quot;date_type&quot;:&quot;update&quot;}" doc:name="Set Http Request Body"/>
+
+        <http:request config-ref="HTTP_Request_Configuration" path="${api.path.accountinfo}" method="POST" doc:name="Call AccountInfo API">
+          <http:request-builder>
+            <http:header headerName="AppID" value="${api.appID}"/>
+            <http:header headerName="AppPwd" value="${api.appPwd}"/>
+            <http:header headerName="Content-Type" value="${api.contentType}"/>
+
+          </http:request-builder>
+        </http:request>
+      </processor-chain>
+    </poll>
+    <dw:transform-message doc:name="Transform jde_account from api">
+      <dw:input-payload mimeType="application/json"/>
+      <dw:set-payload>
+        <![CDATA[%dw 1.0
+%output application/json
+---
+payload map ((payload01 , indexOfPayload01) -> {
+	   account_name: trim payload01.account_name when payload01.account_name != null otherwise payload01.account_name,
+	   account_number: trim payload01.account_number when payload01.account_number != null otherwise payload01.account_number,
+	   credit_hold: trim payload01.credit_hold when payload01.credit_hold != null otherwise payload01.credit_hold,
+	   credit_limit: trim payload01.credit_limit when payload01.credit_limit != null otherwise payload01.credit_limit,
+	   email: trim payload01.email when payload01.email != null otherwise payload01.email,
+	   fax_number: trim payload01.fax_number when payload01.fax_number != null otherwise payload01.fax_number,
+	   markup: trim payload01.markup when payload01.markup != null otherwise payload01.markup,
+	   payment_term: trim payload01.payment_term when payload01.payment_term != null otherwise payload01.payment_term,
+	   phone_number1: trim payload01.phone_number1 when payload01.phone_number1 != null otherwise payload01.phone_number1,
+	   phone_number2: trim payload01.phone_number2 when payload01.phone_number2 != null otherwise payload01.phone_number2,
+	   region_id: trim payload01.region_id when payload01.region_id != null otherwise payload01.region_id,
+	   region_name: trim payload01.region_name when payload01.region_name != null otherwise payload01.region_name,
+	   sales_rep: trim payload01.sales_rep when payload01.sales_rep != null otherwise payload01.sales_rep,
+	   sales_rep_name: trim payload01.sales_rep_name when payload01.sales_rep_name != null otherwise payload01.sales_rep_name,
+	   search_type: trim payload01.search_type when payload01.search_type != null otherwise payload01.search_type,
+	   update_date: trim payload01.update_date when payload01.update_date != null otherwise payload01.update_date,
+	   work_station_id: trim payload01.work_station_id when payload01.work_station_id != null otherwise payload01.work_station_id,
+	   requiredPO: trim payload01.requiredPO when payload01.requiredPO != null otherwise payload01.requiredPO,
+	   create_date: trim payload01.create_date when payload01.create_date != null otherwise payload01.create_date,
+	   account_type: trim payload01.account_type when payload01.account_type != null otherwise payload01.account_type
+	   })
+
+]]>
+      </dw:set-payload>
+    </dw:transform-message>
+
+    <json:json-to-object-transformer returnClass="java.util.List" doc:name="JSON to Object List" />
+    <choice doc:name="Check if payload is not empty">
+      <when expression="#[payload.size() &gt; 0]">
+        <foreach collection="#[payload]" doc:name="For Each">
+          <logger message="Add jde account to queue : count = #[flowVars.counter] : #[payload]" level="INFO" doc:name="Add jde account to queue" category="jde-account-to-queue.jde-account-to-queue-flow"/>
+          <set-variable variableName="fv_account_last_update" value="#[payload.update_date]" doc:name="fv_account_last_update"/>
+          <jms:outbound-endpoint queue="${jde.account_queue}" connector-ref="Active_MQ" doc:name="jde_account_queue">
+          </jms:outbound-endpoint>
+        </foreach>
+      </when>
+      <otherwise>
+        <logger message="No account found, skip" level="INFO" doc:name="No account found, skip" category="jde-account-to-queue.jde-account-to-queue-flow"/>
+      </otherwise>
+    </choice>
+    <logger message="jde-account-to-queue-flow end at: #[new java.text.SimpleDateFormat('yyyy-MM-dd hh:mm:ss aa').format(new java.util.Date())]" level="INFO" doc:name="Finished" category="jde-account-to-queue.jde-account-to-queue-flow"/>
+    <exception-strategy ref="Catch_Exception_Handling1" doc:name="Reference Exception Strategy"/>
+  </flow>
+</mule>

@@ -1,0 +1,16 @@
+{
+    "inputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "ContryCode"
+        }
+    },
+    "outputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "CountryAttributeValue"
+        }
+    },
+    "id": "4b57e475-097f-4d00-b38c-24687faa4465",
+    "version": "5.2.0.0"
+}
